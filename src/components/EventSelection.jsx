@@ -47,7 +47,7 @@ const events = [
     title: 'Custom',
     subtitle: 'Events',
     icon: <GiPartyPopper className="text-4xl" />,
-    image: 'https://images.unsplash.com/photo-1523437113738-bbd3cc89fb19?auto=format&fit=crop&w=1471&q=80',
+    image: 'https://images.unsplash.com/photo-1517488629431-6427e0ee1e5f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     color: 'from-amber-500/30 to-orange-600/30',
     description: 'Create a custom event wishlist',
   },
