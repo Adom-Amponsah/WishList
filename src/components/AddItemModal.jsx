@@ -1,134 +1,162 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Dialog } from '@headlessui/react'
 import { MELCOM_CATEGORIES, scrapeCategory } from '../services/melcomScraper'
+import { addItemToWishlist } from '../services/wishlistService'
+import toast from 'react-hot-toast'
 
-const AddItemModal = ({ isOpen, onClose, theme, type, onAdd }) => {
+export default function AddItemModal({ isOpen, onClose, wishlistId }) {
+  const [selectedCategory, setSelectedCategory] = useState('')
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState(null)
   const [error, setError] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasNextPage, setHasNextPage] = useState(false)
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      if (!selectedCategory) return
-      setLoading(true)
-      setError(null)
-      try {
-        const items = await scrapeCategory(selectedCategory)
-        setProducts(items)
-      } catch (error) {
-        setError('Failed to fetch products. Please try again.')
-        console.error('Error:', error)
-      }
+  const fetchProducts = async (categoryId, page = 1) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await scrapeCategory(categoryId, page)
+      setProducts(result.products)
+      setHasNextPage(result.pagination.hasNextPage)
+      setCurrentPage(page)
+    } catch (err) {
+      setError(err.message)
+      setProducts([])
+      setHasNextPage(false)
+    } finally {
       setLoading(false)
     }
+  }
 
+  useEffect(() => {
     if (selectedCategory) {
-      fetchProducts()
+      setCurrentPage(1)
+      fetchProducts(selectedCategory, 1)
     }
   }, [selectedCategory])
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="relative max-h-[90vh] w-[90vw] max-w-4xl overflow-hidden rounded-3xl bg-white p-6 shadow-2xl"
-          >
-            <h2 className="mb-6 text-2xl font-bold">
-              Add {type === 'gift' ? 'Gift Item' : 'Cash Fund'}
-            </h2>
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value)
+  }
 
-            {/* Category Selection */}
-            {!selectedCategory && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {MELCOM_CATEGORIES.map((category) => (
-                  <motion.button
-                    key={category.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="p-4 rounded-xl border hover:border-blue-500 text-left"
-                    onClick={() => setSelectedCategory(category.id)}
-                  >
-                    <h3 className="font-semibold">{category.name}</h3>
-                    <p className="text-sm text-gray-500">{category.count} items</p>
-                  </motion.button>
+  const handlePageChange = (newPage) => {
+    fetchProducts(selectedCategory, newPage)
+    // Scroll to top of modal when page changes
+    const modalPanel = document.querySelector('.modal-panel')
+    if (modalPanel) modalPanel.scrollTop = 0
+  }
+
+  const handleAddItem = (product) => {
+    try {
+      const success = addItemToWishlist(wishlistId, product)
+      
+      if (success) {
+        toast.success('Item added to wishlist!', {
+          icon: '🎉',
+        })
+      } else {
+        toast.error('This item is already in your wishlist!', {
+          icon: '⚠️',
+        })
+      }
+    } catch (error) {
+      toast.error('Failed to add item to wishlist', {
+        icon: '❌',
+      })
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <Dialog.Panel className="modal-panel mx-auto max-w-4xl w-full bg-white rounded-xl p-6 max-h-[90vh] overflow-y-auto">
+          <Dialog.Title className="text-2xl font-bold mb-4">Add Item from Melcom</Dialog.Title>
+          
+          <div className="mb-6">
+            <select
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              className="w-full p-2 border rounded"
+              disabled={loading}
+            >
+              <option value="">Select a category</option>
+              {MELCOM_CATEGORIES.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name} ({category.count} items)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {loading && (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              <p className="ml-4 text-lg">Loading products...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && products.length > 0 && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                {products.map((product) => (
+                  <div key={product.sku} className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
+                    <img src={product.image} alt={product.title} className="w-full h-48 object-contain mb-2" />
+                    <h3 className="font-semibold text-sm mb-1">{product.title}</h3>
+                    <p className="text-gray-600">{product.price}</p>
+                    <button
+                      onClick={() => handleAddItem(product)}
+                      className="mt-2 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+                    >
+                      Add to Wishlist
+                    </button>
+                  </div>
                 ))}
               </div>
-            )}
 
-            {/* Products Grid */}
-            {selectedCategory && (
-              <>
-                <div className="mb-6 flex items-center justify-between">
+              <div className="flex justify-between items-center mt-4">
+                {currentPage > 1 && (
                   <button
-                    className="text-blue-500 hover:text-blue-700"
-                    onClick={() => setSelectedCategory(null)}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={loading}
+                    className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50 hover:bg-gray-200"
                   >
-                    ← Back to Categories
+                    Previous
                   </button>
-                  <h3 className="font-semibold">
-                    {MELCOM_CATEGORIES.find(c => c.id === selectedCategory)?.name}
-                  </h3>
-                </div>
-
-                {loading ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500" />
-                  </div>
-                ) : error ? (
-                  <div className="text-center text-red-500 p-8">{error}</div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 overflow-y-auto max-h-[60vh]">
-                    {products.map((product) => (
-                      <motion.div
-                        key={product.sku}
-                        whileHover={{ scale: 1.02 }}
-                        className="cursor-pointer rounded-xl border p-4 hover:shadow-lg"
-                        onClick={() => {
-                          onAdd({
-                            name: product.title,
-                            price: product.price,
-                            image: product.image,
-                            url: product.url
-                          })
-                        }}
-                      >
-                        <img
-                          src={product.image}
-                          alt={product.title}
-                          className="mb-4 h-48 w-full rounded-lg object-cover"
-                        />
-                        <h3 className="mb-2 font-semibold">{product.title}</h3>
-                        <p className="text-lg font-bold text-blue-600">
-                          {product.price}
-                        </p>
-                      </motion.div>
-                    ))}
-                  </div>
                 )}
-              </>
-            )}
+                <span className="text-sm">
+                  Page {currentPage}
+                </span>
+                {hasNextPage && (
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={loading}
+                    className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50 hover:bg-gray-200"
+                  >
+                    Next
+                  </button>
+                )}
+              </div>
+            </>
+          )}
 
+          <div className="mt-6 flex justify-end">
             <button
-              className="absolute right-6 top-6 text-2xl text-gray-500 hover:text-gray-700"
               onClick={onClose}
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
             >
-              ×
+              Close
             </button>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </div>
+        </Dialog.Panel>
+      </div>
+    </Dialog>
   )
-}
-
-export default AddItemModal 
+} 

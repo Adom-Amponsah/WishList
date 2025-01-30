@@ -18,9 +18,12 @@ export const MELCOM_CATEGORIES = [
 // Using ScraperOps proxy service with additional parameters
 const PROXY_URL = 'https://proxy.scrapeops.io/v1/?api_key=a0a77055-fbff-4791-bb11-9cb771f81e98&render_js=true&country=gh&url='
 
-export const scrapeCategory = async (categoryId) => {
+const ITEMS_PER_PAGE = 12
+const MAX_PAGES = 3  // Maximum number of pages to fetch
+
+export const scrapeCategory = async (categoryId, page = 1) => {
   try {
-    const url = `https://melcom.com/categories.html?cat=${categoryId}`
+    const url = `https://melcom.com/categories.html?cat=${categoryId}&p=${page}`
     console.log('Fetching URL:', url)
     
     const encodedUrl = encodeURIComponent(url)
@@ -30,7 +33,7 @@ export const scrapeCategory = async (categoryId) => {
       headers: {
         'accept': 'application/json'
       },
-      timeout: 60000 // 60 second timeout since JS rendering might take longer
+      timeout: 60000
     })
     
     // Check if we got an actual HTML response
@@ -40,62 +43,27 @@ export const scrapeCategory = async (categoryId) => {
       throw new Error('Failed to get product page content')
     }
     
-    console.log('Response status:', response.status)
-    console.log('Raw HTML length:', response.data.length)
-    console.log('First 500 characters of response:', response.data.substring(0, 500))
-    
     const $ = cheerio.load(response.data)
-    console.log('HTML loaded with Cheerio')
     
-    // Log meta tags for debugging
-    console.log('Meta Tags:')
-    $('meta').each((i, elem) => {
-      console.log({
-        name: $(elem).attr('name'),
-        property: $(elem).attr('property'),
-        content: $(elem).attr('content')
-      })
-    })
-
-    // Log title for debugging
-    console.log('Page Title:', $('title').text())
-
-    // Log some basic HTML structure
-    console.log('Body classes:', $('body').attr('class'))
-    console.log('Main content div exists:', $('#maincontent').length > 0)
-    console.log('Product container exists:', $('.container-products-switch').length > 0)
+    // Debug HTML structure
+    console.log('Found products wrapper:', $('.products.wrapper.grid.products-grid').length > 0)
+    console.log('Found products container:', $('.container-products-switch').length > 0)
+    const productCount = $('.item.product.product-item').length
+    console.log('Found product items:', productCount)
     
     const products = []
 
-    // Updated selector to match the actual HTML structure
-    $('.container-products-switch.products.list.items.product-items li.item.product.product-item').each((index, element) => {
+    // Updated selector to match the actual HTML structure from Melcom
+    $('.products.wrapper.grid.products-grid .container-products-switch li.item.product.product-item').each((index, element) => {
       const $el = $(element)
       
       // Get product link and details
       const productLink = $el.find('a.product.photo.product-item-photo')
       const url = productLink.attr('href')
-      const title = $el.find('.product-item-link').text().trim()
-      
-      // Get product image - updated to handle the new image structure
+      const title = $el.find('.product.name.product-item-name .product-item-link').text().trim()
       const image = $el.find('.product-image-photo').first().attr('src')
-      
-      // Get price - handle both special price and regular price
-      const specialPrice = $el.find('.special-price .price').text().trim()
-      const regularPrice = $el.find('.old-price .price').text().trim()
-      const price = specialPrice || regularPrice
-      
-      // Get SKU from form data
-      const sku = $el.find('[data-product-sku]').attr('data-product-sku')
-
-      console.log(`Product ${index + 1}:`, {
-        title,
-        price,
-        image,
-        url,
-        sku,
-        specialPrice,
-        regularPrice
-      })
+      const price = $el.find('.price-box.price-final_price .price').text().trim()
+      const sku = $el.find('form[data-role="tocart-form"]').attr('data-product-sku')
 
       if (title && price && image && url) {
         products.push({
@@ -104,26 +72,23 @@ export const scrapeCategory = async (categoryId) => {
           image,
           url,
           sku,
-          originalPrice: regularPrice || price,
+          originalPrice: price,
           category: MELCOM_CATEGORIES.find(cat => cat.id === categoryId)?.name
-        })
-      } else {
-        console.log(`Product ${index + 1} missing required fields:`, {
-          hasTitle: !!title,
-          hasPrice: !!price,
-          hasImage: !!image,
-          hasUrl: !!url
         })
       }
     })
 
-    console.log('Total valid products found:', products.length)
+    console.log(`Page ${page}: Found ${products.length} products`)
 
-    if (products.length === 0) {
-      throw new Error('No products found in this category')
+    // Simplified pagination logic - just check if we have products and are under MAX_PAGES
+    return {
+      products,
+      pagination: {
+        currentPage: page,
+        hasNextPage: products.length > 0 && page < MAX_PAGES,
+        hasPreviousPage: page > 1
+      }
     }
-
-    return products
   } catch (error) {
     console.error('Scraping error:', {
       message: error.message,
@@ -196,5 +161,4 @@ export const scrapeProduct = async (url) => {
     throw new Error('Failed to fetch product details')
   }
 } 
-
 

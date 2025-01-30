@@ -1,14 +1,45 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useTransform } from 'framer-motion'
 import AddItemModal from './AddItemModal'
-
+import { createWishlist } from '../services/wishlistService'
+import toast from 'react-hot-toast'
 
 const WishlistCreator = () => {
   const { eventType } = useParams()
-  const [activeChoice, setActiveChoice] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [items, setItems] = useState([])
+  const navigate = useNavigate()
+  const [name, setName] = useState('')
+  const [showAddItems, setShowAddItems] = useState(false)
+  const [wishlistId, setWishlistId] = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const eventTitles = {
+    'birthday': 'Birthday Wishlist',
+    'wedding': 'Wedding Registry',
+    'baby-shower': 'Baby Shower Registry',
+    'housewarming': 'Housewarming Wishlist',
+    'graduation': 'Graduation Wishlist'
+  }
+
+  const handleCreateWishlist = (e) => {
+    e.preventDefault()
+    if (!name.trim()) {
+      toast.error('Please enter a wishlist name')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const newWishlist = createWishlist(name.trim(), eventType)
+      setWishlistId(newWishlist.id)
+      toast.success('Wishlist created! Now add some items.')
+      setShowAddItems(true)
+    } catch (error) {
+      toast.error('Failed to create wishlist')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const themes = {
     wedding: {
@@ -34,149 +65,62 @@ const WishlistCreator = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-100% via-[#f9f9f9] to-white">
       <div className="container mx-auto px-4 py-12">
-        <motion.h1
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="mb-16 text-center text-4xl font-bold text-gray-800"
-        >
-          Create Your Perfect <br />
-          <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            {eventType.split('-').join(' ').toUpperCase()} Wishlist
-          </span>
-        </motion.h1>
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold text-center text-white mb-2">
+            {eventTitles[eventType] || 'Create Wishlist'}
+          </h1>
+          <p className="text-center text-gray-300 mb-8">
+            Give your wishlist a name to get started
+          </p>
 
-        <div className="grid gap-8 md:grid-cols-2">
-          {/* Gift Card */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="relative h-96 cursor-pointer overflow-hidden rounded-3xl shadow-2xl"
-            onHoverStart={() => setActiveChoice('gift')}
-            onHoverEnd={() => setActiveChoice(null)}
-            onClick={() => {
-              setActiveChoice('gift')
-              setIsModalOpen(true)
-            }}
-          >
-            <div className="absolute inset-0 bg-black/20" />
-            <img
-              src={currentTheme.images.gift}
-              className="h-full w-full object-cover"
-              alt="Gift items"
-            />
-            
-            <motion.div
-              className="absolute bottom-0 left-0 right-0 bg-white/80 p-6 backdrop-blur-sm"
-              initial={{ y: 100 }}
-              animate={{ y: activeChoice === 'gift' ? 0 : 100 }}
-            >
-              <h2 className="text-2xl font-bold text-gray-800">Add Gifts</h2>
-              <p className="text-gray-600">Physical items you'd love to receive</p>
-            </motion.div>
-            
-            <motion.div
-              className="absolute left-6 top-6 rounded-full bg-white px-4 py-2 shadow-lg"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-            >
-              🎁
-            </motion.div>
-          </motion.div>
-
-          {/* Money Card */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="relative h-96 cursor-pointer overflow-hidden rounded-3xl shadow-2xl"
-            onHoverStart={() => setActiveChoice('money')}
-            onHoverEnd={() => setActiveChoice(null)}
-            onClick={() => {
-              setActiveChoice('money')
-              setIsModalOpen(true)
-            }}
-          >
-            <div className="absolute inset-0 bg-black/20" />
-            <img
-              src={currentTheme.images.money}
-              className="h-full w-full object-cover"
-              alt="Money envelope"
-            />
-            
-            <motion.div
-              className="absolute bottom-0 left-0 right-0 bg-white/80 p-6 backdrop-blur-sm"
-              initial={{ y: 100 }}
-              animate={{ y: activeChoice === 'money' ? 0 : 100 }}
-            >
-              <h2 className="text-2xl font-bold text-gray-800">Cash Funds</h2>
-              <p className="text-gray-600">Collect contributions for special purposes</p>
-            </motion.div>
-            
-            <motion.div
-              className="absolute left-6 top-6 rounded-full bg-white px-4 py-2 shadow-lg"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-            >
-              💸
-            </motion.div>
-          </motion.div>
-        </div>
-
-        {/* Floating Add Button */}
-        <motion.button
-          whileHover={{ scale: 1.1, rotate: 10 }}
-          whileTap={{ scale: 0.9 }}
-          className="fixed bottom-8 right-8 flex h-16 w-16 items-center justify-center rounded-full bg-pink-500 text-2xl text-white shadow-xl"
-          onClick={() => setIsModalOpen(true)}
-        >
-          +
-        </motion.button>
-
-        {/* Items Grid */}
-        {items.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4"
-          >
-            {items.map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="group relative overflow-hidden rounded-2xl bg-white shadow-lg"
-              >
-                <img
-                  src={item.image}
-                  className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  alt={item.name}
+          {!showAddItems ? (
+            <form onSubmit={handleCreateWishlist} className="space-y-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+                  Wishlist Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter a name for your wishlist"
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg 
+                            placeholder-gray-400 focus:ring-2 focus:ring-blue-500 
+                            focus:border-blue-500 backdrop-blur-sm "
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                  required
                 />
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-800">{item.name}</h3>
-                  <p className="text-sm text-gray-600">${item.price}</p>
-                </div>
-                <div className="absolute right-2 top-2 rounded-full bg-white/80 p-2 backdrop-blur-sm">
-                  {item.type === 'gift' ? '🎁' : '💵'}
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </div>
+              </div>
 
-      <AddItemModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          setActiveChoice(null)
-        }}
-        theme={currentTheme}
-        type={activeChoice}
-        onAdd={(item) => {
-          setItems([...items, { ...item, type: activeChoice }])
-          setIsModalOpen(false)
-          setActiveChoice(null)
-        }}
-      />
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/events')}
+                  className="flex-1 px-4 py-2 bg-white/10 text-white rounded-lg 
+                            hover:bg-white/20 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg 
+                            hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                >
+                  {isSubmitting ? 'Creating...' : 'Continue to Add Items'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <AddItemModal
+              isOpen={true}
+              onClose={() => navigate('/my-wishlists')}
+              wishlistId={wishlistId}
+            />
+          )}
+        </div>
+      </div>
     </div>
   )
 }
