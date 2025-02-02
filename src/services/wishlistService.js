@@ -1,6 +1,7 @@
 // Wishlist management service
 
 const WISHLISTS_STORAGE_KEY = 'wishlists'
+const SHARED_WISHLISTS_KEY = 'shared_wishlists'
 
 // Simple function to generate a unique ID
 const generateId = () => {
@@ -170,6 +171,23 @@ export const updateWishlistName = (wishlistId, newName) => {
   return true
 }
 
+const saveSharedWishlist = (wishlist) => {
+  try {
+    // Get existing shared wishlists
+    const sharedWishlists = JSON.parse(localStorage.getItem(SHARED_WISHLISTS_KEY) || '{}')
+    
+    // Add or update this wishlist
+    sharedWishlists[wishlist.shareId] = wishlist
+    
+    // Save back to localStorage
+    localStorage.setItem(SHARED_WISHLISTS_KEY, JSON.stringify(sharedWishlists))
+    return true
+  } catch (error) {
+    console.error('Error saving shared wishlist:', error)
+    return false
+  }
+}
+
 export const updateWishlistUser = (wishlistId, userData) => {
   try {
     const wishlists = getAllWishlists()
@@ -192,11 +210,9 @@ export const updateWishlistUser = (wishlistId, userData) => {
       list.id === wishlistId ? wishlist : list
     )
     
-    // Save to localStorage
+    // Save to both regular and shared storage
     saveWishlists(updatedWishlists)
-    
-    // Save to sessionStorage for shared access
-    sessionStorage.setItem(`shared_wishlist_${wishlist.shareId}`, JSON.stringify(wishlist))
+    saveSharedWishlist(wishlist)
     
     return true
   } catch (error) {
@@ -221,8 +237,8 @@ export const generateShareableLink = (wishlistId) => {
       saveWishlists(updatedWishlists)
     }
 
-    // Save to sessionStorage for shared access
-    sessionStorage.setItem(`shared_wishlist_${wishlist.shareId}`, JSON.stringify(wishlist))
+    // Save to shared storage
+    saveSharedWishlist(wishlist)
 
     return `${window.location.origin}/share/${wishlist.shareId}`
   } catch (error) {
@@ -233,21 +249,16 @@ export const generateShareableLink = (wishlistId) => {
 
 export const getWishlistByShareId = (shareId) => {
   try {
+    // First try to get from regular wishlists
     const wishlists = getAllWishlists()
     const wishlist = wishlists.find(list => list.shareId === shareId)
-    
-    if (!wishlist) {
-      // Try to get from session storage as a backup
-      const sessionWishlist = sessionStorage.getItem(`shared_wishlist_${shareId}`)
-      if (sessionWishlist) {
-        return JSON.parse(sessionWishlist)
-      }
-      return null
+    if (wishlist) {
+      return wishlist
     }
     
-    // Store in session storage for persistence
-    sessionStorage.setItem(`shared_wishlist_${shareId}`, JSON.stringify(wishlist))
-    return wishlist
+    // If not found, try to get from shared wishlists storage
+    const sharedWishlists = JSON.parse(localStorage.getItem(SHARED_WISHLISTS_KEY) || '{}')
+    return sharedWishlists[shareId] || null
   } catch (error) {
     console.error('Error getting shared wishlist:', error)
     return null
