@@ -62,34 +62,24 @@ export default function WishlistDetails() {
   }
 
   const handleUserDataSubmit = async (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      // Update wishlist with user data
-      const success = await updateWishlistUser(id, userData)
-      if (success) {
-        // Get updated wishlist
-        const updatedWishlist = getWishlistById(id)
-        if (!updatedWishlist || !updatedWishlist.shareId) {
-          throw new Error('Failed to generate share ID')
-        }
-        
-        // Generate shareable link
-        const link = `${window.location.origin}/share/${updatedWishlist.shareId}`
-        setShareableLink(link)
-        setWishlist(updatedWishlist)
-        toast.success('Wishlist is ready to share!')
-      } else {
-        throw new Error('Failed to update wishlist')
+      const shareableLink = updateWishlistUser(id, userData);
+      if (!shareableLink) {
+        throw new Error('Failed to generate share link');
       }
+
+      setShareableLink(shareableLink);
+      toast.success('Wishlist shared successfully!');
     } catch (error) {
-      console.error('Share error:', error)
-      toast.error('Failed to create shareable link')
+      console.error('Share error:', error);
+      toast.error('Failed to share wishlist');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const copyToClipboard = async () => {
     try {

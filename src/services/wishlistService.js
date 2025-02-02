@@ -182,12 +182,20 @@ export const updateWishlistName = (wishlistId, newName) => {
   return true
 }
 
-export const updateWishlistUser = async (wishlistId, userData) => {
+export const updateWishlistUser = (wishlistId, userData) => {
   try {
+    if (!wishlistId || !userData) {
+      console.error('Missing wishlistId or userData');
+      return null;
+    }
+
     const wishlists = getAllWishlists();
     const wishlist = wishlists.find(list => list.id === wishlistId);
     
-    if (!wishlist) return false;
+    if (!wishlist) {
+      console.error('Wishlist not found:', wishlistId);
+      return null;
+    }
 
     // Add user data to wishlist
     wishlist.userData = {
@@ -195,38 +203,48 @@ export const updateWishlistUser = async (wishlistId, userData) => {
       updatedAt: new Date().toISOString()
     };
 
-    // Save to Firebase and get share ID
-    const wishlistData = {
-      ...wishlist,
-      sharedAt: new Date().toISOString(),
-      originalId: wishlist.id
+    // Create a minimal version of the wishlist for sharing
+    const shareableData = {
+      name: wishlist.name,
+      eventType: wishlist.eventType,
+      items: wishlist.items.map(item => ({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        quantity: item.quantity,
+        image_url: item.image_url,
+        notes: item.notes
+      })),
+      userData: {
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone
+      },
+      sharedAt: new Date().toISOString()
     };
 
-    // Add to Firebase
-    const docRef = await addDoc(collection(db, 'shared_wishlists'), wishlistData);
-    const shareId = docRef.id;
-
-    // Update the wishlist with Firebase document ID
-    wishlist.shareId = shareId;
+    // Encode the wishlist data
+    const encodedData = btoa(encodeURIComponent(JSON.stringify(shareableData)));
     
-    // Update the wishlist in the array
+    // Update the wishlist in localStorage
     const updatedWishlists = wishlists.map(list => 
       list.id === wishlistId ? wishlist : list
     );
-    
-    // Save to localStorage
-    saveWishlists(updatedWishlists);
 
-    // Generate and return the shareable link
-    const shareableLink = `${window.location.origin}/share/${shareId}`;
-    console.log('Generated Firebase link:', shareableLink);
-    console.log('Firebase document ID:', shareId);
-    console.log('Stored wishlist data:', wishlistData);
+    const saved = saveWishlists(updatedWishlists);
+    if (!saved) {
+      console.error('Failed to save updated wishlists');
+      return null;
+    }
+
+    // Generate and return the shareable link with encoded data
+    const shareableLink = `${window.location.origin}/share/${encodedData}`;
+    console.log('Generated shareable link with encoded data');
     
     return shareableLink;
   } catch (error) {
     console.error('Error updating wishlist user data:', error);
-    throw error;
+    return null;
   }
 };
 

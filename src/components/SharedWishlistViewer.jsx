@@ -1,59 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { FiGift, FiUser, FiMail, FiPhone, FiHome } from 'react-icons/fi';
 
 const SharedWishlistViewer = () => {
   const { shareId } = useParams();
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchWishlist = async () => {
-      if (!shareId) {
-        setError('Invalid wishlist link');
-        setLoading(false);
-        return;
-      }
+    if (!shareId) {
+      setError('Invalid wishlist link');
+      return;
+    }
 
-      try {
-        console.log('Attempting to fetch wishlist:', shareId);
-        const docRef = doc(db, 'shared_wishlists', shareId);
-        const docSnap = await getDoc(docRef);
-        
-        if (!docSnap.exists()) {
-          console.error('No wishlist found with ID:', shareId);
-          setError('Wishlist not found');
-          return;
-        }
-
-        const wishlistData = { id: docSnap.id, ...docSnap.data() };
-        console.log('Successfully retrieved wishlist:', wishlistData);
-        setWishlist(wishlistData);
-      } catch (err) {
-        console.error('Error fetching wishlist:', err);
-        setError('Failed to load wishlist. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWishlist();
+    try {
+      // Decode the wishlist data from the URL
+      const decodedData = JSON.parse(decodeURIComponent(atob(shareId)));
+      console.log('Decoded wishlist data:', decodedData);
+      setWishlist(decodedData);
+    } catch (err) {
+      console.error('Error decoding wishlist data:', err);
+      setError('Invalid wishlist link. The data might be corrupted.');
+    }
   }, [shareId]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading wishlist...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -74,7 +44,14 @@ const SharedWishlistViewer = () => {
   }
 
   if (!wishlist) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading wishlist...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
