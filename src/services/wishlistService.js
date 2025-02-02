@@ -218,15 +218,15 @@ export const updateWishlistUser = async (wishlistId, userData) => {
     saveWishlists(updatedWishlists);
 
     // Generate and return the shareable link
-    const shareableLink = `${window.location.origin}/wishlist/share/${shareId}`;
+    const shareableLink = `${window.location.origin}/share/${shareId}`;
     console.log('Generated Firebase link:', shareableLink);
     console.log('Firebase document ID:', shareId);
     console.log('Stored wishlist data:', wishlistData);
     
-    return true;
+    return shareableLink;
   } catch (error) {
     console.error('Error updating wishlist user data:', error);
-    return false;
+    throw error;
   }
 };
 
@@ -235,7 +235,7 @@ export const generateShareableLink = (wishlistId) => {
     const wishlist = getWishlistById(wishlistId);
     if (!wishlist || !wishlist.shareId) return null;
 
-    const shareableLink = `${window.location.origin}/wishlist/share/${wishlist.shareId}`;
+    const shareableLink = `${window.location.origin}/share/${wishlist.shareId}`;
     console.log('Retrieving shareable link:', shareableLink);
     return shareableLink;
   } catch (error) {

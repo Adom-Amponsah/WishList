@@ -7,6 +7,7 @@ import MyWishlists from './components/MyWishlists'
 import WishlistDetails from './components/WishlistDetails'
 import AddItemsPage from './components/AddItemsPage'
 import SharedWishlist from './components/SharedWishlist'
+import SharedWishlistViewer from './components/SharedWishlistViewer'
 import './App.css'
 
 export default function App() {
@@ -39,7 +40,7 @@ export default function App() {
         <Route path="/my-wishlists" element={<MyWishlists />} />
         <Route path="/wishlist/:id" element={<WishlistDetails />} />
         <Route path="/wishlist/:id/add-items" element={<AddItemsPage />} />
-        <Route path="/share/:shareId" element={<SharedWishlist />} />
+        <Route path="/share/:shareId" element={<SharedWishlistViewer />} />
       </Routes>
     </BrowserRouter>
   )
