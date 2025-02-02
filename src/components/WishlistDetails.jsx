@@ -69,14 +69,23 @@ export default function WishlistDetails() {
       // Update wishlist with user data
       const success = await updateWishlistUser(id, userData)
       if (success) {
+        // Get updated wishlist
+        const updatedWishlist = getWishlistById(id)
+        if (!updatedWishlist || !updatedWishlist.shareId) {
+          throw new Error('Failed to generate share ID')
+        }
+        
         // Generate shareable link
-        const link = `${window.location.origin}/wishlist/share/${id}`
+        const link = `${window.location.origin}/share/${updatedWishlist.shareId}`
         setShareableLink(link)
-        setWishlist(getWishlistById(id))
+        setWishlist(updatedWishlist)
         toast.success('Wishlist is ready to share!')
+      } else {
+        throw new Error('Failed to update wishlist')
       }
     } catch (error) {
-      toast.error('Failed to update wishlist')
+      console.error('Share error:', error)
+      toast.error('Failed to create shareable link')
     } finally {
       setIsSubmitting(false)
     }

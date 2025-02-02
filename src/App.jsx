@@ -9,7 +9,7 @@ import AddItemsPage from './components/AddItemsPage'
 import SharedWishlist from './components/SharedWishlist'
 import './App.css'
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
       <Toaster 
@@ -44,5 +44,3 @@ function App() {
     </BrowserRouter>
   )
 }
-
-export default App

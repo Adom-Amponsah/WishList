@@ -1,9 +1,13 @@
 // Wishlist management service
 
 const WISHLISTS_STORAGE_KEY = 'wishlists'
-import ShortUniqueId from 'short-unique-id'
 
-const uid = new ShortUniqueId({ length: 10 })
+// Simple function to generate a unique ID
+const generateId = () => {
+  const timestamp = Date.now().toString(36)
+  const randomStr = Math.random().toString(36).substring(2, 8)
+  return `${timestamp}-${randomStr}`
+}
 
 // Helper function to get all wishlists from localStorage
 export const getAllWishlists = () => {
@@ -175,7 +179,7 @@ export const updateWishlistUser = (wishlistId, userData) => {
     
     // Generate shareId if it doesn't exist
     if (!wishlist.shareId) {
-      wishlist.shareId = uid()
+      wishlist.shareId = generateId()
     }
     
     wishlist.userData = {
@@ -183,8 +187,15 @@ export const updateWishlistUser = (wishlistId, userData) => {
       updatedAt: new Date().toISOString()
     }
     
-    // Store the updated wishlist in both localStorage and sessionStorage
-    saveWishlists(wishlists)
+    // Update the wishlist in the array
+    const updatedWishlists = wishlists.map(list => 
+      list.id === wishlistId ? wishlist : list
+    )
+    
+    // Save to localStorage
+    saveWishlists(updatedWishlists)
+    
+    // Save to sessionStorage for shared access
     sessionStorage.setItem(`shared_wishlist_${wishlist.shareId}`, JSON.stringify(wishlist))
     
     return true
@@ -195,21 +206,29 @@ export const updateWishlistUser = (wishlistId, userData) => {
 }
 
 export const generateShareableLink = (wishlistId) => {
-  const wishlist = getWishlistById(wishlistId)
-  if (!wishlist) return null
+  try {
+    const wishlist = getWishlistById(wishlistId)
+    if (!wishlist) return null
 
-  // Generate a unique shareId if it doesn't exist
-  if (!wishlist.shareId) {
-    wishlist.shareId = uid()
-    const wishlists = getAllWishlists()
-    const index = wishlists.findIndex(w => w.id === wishlistId)
-    if (index !== -1) {
-      wishlists[index] = wishlist
-      saveWishlists(wishlists)
+    // Generate a unique shareId if it doesn't exist
+    if (!wishlist.shareId) {
+      wishlist.shareId = generateId()
+      
+      const wishlists = getAllWishlists()
+      const updatedWishlists = wishlists.map(list => 
+        list.id === wishlistId ? wishlist : list
+      )
+      saveWishlists(updatedWishlists)
     }
-  }
 
-  return `${window.location.origin}/share/${wishlist.shareId}`
+    // Save to sessionStorage for shared access
+    sessionStorage.setItem(`shared_wishlist_${wishlist.shareId}`, JSON.stringify(wishlist))
+
+    return `${window.location.origin}/share/${wishlist.shareId}`
+  } catch (error) {
+    console.error('Error generating shareable link:', error)
+    return null
+  }
 }
 
 export const getWishlistByShareId = (shareId) => {
