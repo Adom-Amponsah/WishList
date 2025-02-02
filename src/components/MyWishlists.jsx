@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiCalendar, FiGift, FiPlus, FiEye, FiTrash2, FiX } from 'react-icons/fi'
+import { FiCalendar, FiGift, FiPlus, FiEye, FiTrash2, FiX, FiShoppingBag } from 'react-icons/fi'
 import { FaBirthdayCake, FaRing, FaBaby, FaHome, FaGraduationCap, FaTree, FaHeart } from 'react-icons/fa'
 import { getAllWishlistsForUser, deleteWishlist } from '../services/wishlistService'
 import toast from 'react-hot-toast'
@@ -78,7 +78,7 @@ export default function MyWishlists() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header with moving images - Adjusted for mobile */}
       <div className="relative h-[300px] md:h-[400px] bg-black overflow-hidden">
         <div className="absolute inset-0 grid grid-cols-3 gap-4 md:flex">
@@ -117,7 +117,7 @@ export default function MyWishlists() {
       </div>
 
       {/* Content Section - Adjusted for mobile */}
-      <div className="container mx-auto px-4 md:px-6 -mt-16 md:-mt-20 pb-16 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Create New Wishlist Button */}
         <div className="mb-8 text-center">
           <Link
@@ -148,30 +148,16 @@ export default function MyWishlists() {
         )}
 
         {/* Wishlists Grid - Adjusted for mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {wishlists.map((wishlist) => (
             <motion.div
               key={wishlist.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              whileHover={{ y: -5 }}
-              className="group relative bg-gradient-to-br from-white to-gray-50 rounded-xl md:rounded-2xl shadow-lg hover:shadow-xl 
-                       transition-all overflow-hidden border border-gray-100"
+              className="group relative"
             >
-              <div className="absolute top-3 md:top-4 right-3 md:right-4 z-10">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setDeleteModal(wishlist)}
-                  className="p-2 bg-red-50 text-red-500 rounded-full opacity-0 group-hover:opacity-100 
-                           transition-opacity hover:bg-red-100"
-                >
-                  <FiTrash2 className="w-4 md:w-5 h-4 md:h-5" />
-                </motion.button>
-              </div>
-
-              <div className="p-4 md:p-6">
-                <div className="flex flex-col gap-3 md:gap-4">
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div className="p-4 md:p-6">
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 md:p-3 bg-gray-50 rounded-xl">
                       {getEventIcon(wishlist.eventType)}
@@ -180,20 +166,34 @@ export default function MyWishlists() {
                       <h2 className="text-lg md:text-2xl font-bold text-gray-900 line-clamp-1">{wishlist.name}</h2>
                       <p className="text-sm text-gray-500">{wishlist.eventType}</p>
                     </div>
+                    {/* Delete Button - Always Visible */}
+                    <button
+                      onClick={() => setDeleteModal(wishlist)}
+                      className="ml-auto p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    >
+                      <FiTrash2 className="w-5 h-5" />
+                    </button>
                   </div>
 
-                  <div className="flex items-center justify-between text-gray-500 text-xs md:text-sm">
+                  <div className="flex items-center justify-between text-gray-500 text-xs md:text-sm mt-4">
                     <div className="flex items-center gap-1.5 md:gap-2">
                       <FiCalendar className="opacity-75" />
                       <span>{new Date(wishlist.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <span>{wishlist.items.length} items</span>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <FiShoppingBag className="w-4 h-4" />
+                      <span>{wishlist.items?.length || 0} items</span>
+                      <span>•</span>
+                      <span>₵{(wishlist.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
                   </div>
 
                   <div className="pt-3 md:pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-between mb-3 md:mb-4">
                       <span className="text-sm text-gray-500">Total Value</span>
-                      <span className="text-lg md:text-2xl font-bold text-blue-600">₵{wishlist.totalPrice.toLocaleString()}</span>
+                      <span className="text-lg md:text-2xl font-bold text-blue-600">
+                        ₵{(wishlist.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </span>
                     </div>
 
                     <div className="flex gap-2 md:gap-3">
@@ -205,14 +205,6 @@ export default function MyWishlists() {
                       >
                         <FiEye className="w-4 h-4" />
                         View Details
-                      </Link>
-                      <Link
-                        to={`/wishlist/${wishlist.id}/add-items`}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5
-                                 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors text-sm md:text-base"
-                      >
-                        <FiPlus className="w-4 h-4" />
-                        Add Items
                       </Link>
                     </div>
                   </div>

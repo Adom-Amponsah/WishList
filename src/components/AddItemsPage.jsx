@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getWishlistById, addItemToWishlist, removeItemFromWishlist } from '../services/wishlistService'
+import { getWishlistById, addItemToWishlist, removeItemFromWishlist, getAllWishlists, updateItemQuantity } from '../services/wishlistService'
 import { getAllCategories, getProductsByCategory, searchProducts } from '../services/supabase'
 import toast from 'react-hot-toast'
-import { FiSearch, FiShoppingBag, FiX, FiChevronLeft, FiChevronRight, FiTrash2, FiPlus, FiCheck } from 'react-icons/fi'
+import { FiSearch, FiShoppingBag, FiX, FiChevronLeft, FiChevronRight, FiTrash2, FiPlus, FiCheck, FiMinus } from 'react-icons/fi'
 
 export default function AddItemsPage() {
   const { id } = useParams()
@@ -61,7 +61,7 @@ export default function AddItemsPage() {
       } else {
         result = { products: [], totalCount: 0, hasNextPage: false, currentPage: 1 }
       }
-      
+
       setProducts(result.products)
       setHasNextPage(result.hasNextPage)
       setCurrentPage(result.currentPage)
@@ -99,7 +99,7 @@ export default function AddItemsPage() {
       setHasNextPage(result.hasNextPage)
       setCurrentPage(1)
       setTotalItems(result.totalCount)
-      
+
       if (result.products.length === 0) {
         toast.info('No products found for your search')
       } else {
@@ -151,6 +151,13 @@ export default function AddItemsPage() {
     }
   }
 
+  const handleQuantityChange = (itemId, change) => {
+    const success = updateItemQuantity(id, itemId, Math.max(1, (wishlist?.items.find(item => item.id === itemId)?.quantity || 1) + change))
+    if (success) {
+      setWishlist(getWishlistById(id))
+    }
+  }
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       {/* Mobile Header */}
@@ -192,11 +199,10 @@ export default function AddItemsPage() {
                 <button
                   key={category.id}
                   onClick={() => handleCategorySelect(category.name)}
-                  className={`w-full md:w-auto px-4 py-2 rounded-full transition-all text-center ${
-                    selectedCategory === category.name
+                  className={`w-full md:w-auto px-4 py-2 rounded-full transition-all text-center ${selectedCategory === category.name
                       ? 'bg-blue-500 text-white'
                       : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                  }`}
+                    }`}
                 >
                   {category.name}
                 </button>
@@ -282,11 +288,10 @@ export default function AddItemsPage() {
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-lg text-sm ${
-                      currentPage === 1
+                    className={`px-4 py-2 rounded-lg text-sm ${currentPage === 1
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-blue-500 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     Previous
                   </button>
@@ -296,11 +301,10 @@ export default function AddItemsPage() {
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={!hasNextPage}
-                    className={`px-4 py-2 rounded-lg text-sm ${
-                      !hasNextPage
+                    className={`px-4 py-2 rounded-lg text-sm ${!hasNextPage
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-blue-500 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     Next
                   </button>
@@ -322,29 +326,47 @@ export default function AddItemsPage() {
         </div>
 
         <div className="space-y-3 md:space-y-4">
-        <AnimatePresence>
-    {wishlist?.items.map((item) => (
-      <motion.div
-        key={item.id}
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        className="flex flex-col bg-white p-3 md:p-4 rounded-lg shadow-sm relative"
-      >
-        <img src={item.image_url} alt={item.title} className="w-16 md:w-20 h-16 md:h-20 object-contain" />
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-sm mb-1 line-clamp-2">{item.title}</h3>
-          <span className="text-blue-600 font-semibold">₵{item.price.toFixed(2)}</span>
-        </div>
-        <button
-          onClick={() => handleRemoveItem(item.id)}
-          className="absolute bottom-3 right-3 p-2 text-red-500 hover:bg-red-50 rounded-full"
-        >
-          <FiTrash2 className="w-4 h-4" />
-        </button>
-      </motion.div>
-    ))}
-  </AnimatePresence>
+          <AnimatePresence>
+            {wishlist?.items.map((item) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex gap-3 md:gap-4 bg-white p-3 md:p-4 rounded-lg shadow-sm relative"
+              >
+                <img src={item.image_url} alt={item.title} className="w-16 md:w-20 h-16 md:h-20 object-contain" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-sm mb-1 line-clamp-2">{item.title}</h3>
+                  <span className="text-blue-600 font-semibold">₵{(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                  
+                  {/* Quantity Controls */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      onClick={() => handleQuantityChange(item.id, -1)}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      disabled={item.quantity <= 1}
+                    >
+                      <FiMinus className={`w-4 h-4 ${item.quantity <= 1 ? 'text-gray-300' : 'text-gray-600'}`} />
+                    </button>
+                    <span className="text-sm font-medium w-6 text-center">{item.quantity || 1}</span>
+                    <button
+                      onClick={() => handleQuantityChange(item.id, 1)}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <FiPlus className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleRemoveItem(item.id)}
+                  className="absolute bottom-3 right-3 p-2 text-red-500 hover:bg-red-50 rounded-full"
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
           {(!wishlist?.items || wishlist.items.length === 0) && (
             <div className="text-center text-gray-500 py-8">

@@ -1,9 +1,12 @@
 // Wishlist management service
 
 const WISHLISTS_STORAGE_KEY = 'wishlists'
+import ShortUniqueId from 'short-unique-id'
+
+const uid = new ShortUniqueId({ length: 10 })
 
 // Helper function to get all wishlists from localStorage
-const getAllWishlists = () => {
+export const getAllWishlists = () => {
   try {
     const wishlists = localStorage.getItem(WISHLISTS_STORAGE_KEY)
     if (!wishlists) return []
@@ -83,17 +86,47 @@ export const addItemToWishlist = (wishlistId, item) => {
     image_url: item.image_url,
     url: item.product_url,
     category: item.category,
+    quantity: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
   
   wishlist.items.push(processedItem)
-  wishlist.totalPrice = wishlist.items.reduce((sum, currentItem) => {
-    return sum + currentItem.price
+  
+  // Update total price
+  wishlist.totalPrice = wishlist.items.reduce((sum, item) => {
+    return sum + (item.price * (item.quantity || 1))
   }, 0)
   
   saveWishlists(wishlists)
   return true
+}
+
+export const updateItemQuantity = (wishlistId, itemId, quantity) => {
+  try {
+    const wishlists = getAllWishlists()
+    const wishlist = wishlists.find(list => list.id === wishlistId)
+    
+    if (!wishlist) return false
+
+    const item = wishlist.items.find(item => item.id === itemId)
+    if (!item) return false
+
+    // Ensure quantity is at least 1
+    item.quantity = Math.max(1, quantity)
+    
+    // Update total price
+    wishlist.totalPrice = wishlist.items.reduce((sum, item) => {
+      return sum + (item.price * (item.quantity || 1))
+    }, 0)
+    
+    // Save changes
+    saveWishlists(wishlists)
+    return true
+  } catch (error) {
+    console.error('Error updating item quantity:', error)
+    return false
+  }
 }
 
 export const removeItemFromWishlist = (wishlistId, itemId) => {
@@ -103,7 +136,8 @@ export const removeItemFromWishlist = (wishlistId, itemId) => {
   if (!wishlist) return false
 
   wishlist.items = wishlist.items.filter(item => item.id !== itemId)
-  wishlist.totalPrice = wishlist.items.reduce((sum, item) => sum + Number(item.price), 0)
+  wishlist.totalPrice = wishlist.items.reduce((sum, item) => 
+    sum + (item.price * (item.quantity || 1)), 0)
   
   saveWishlists(wishlists)
   return true
@@ -130,4 +164,46 @@ export const updateWishlistName = (wishlistId, newName) => {
   wishlist.name = newName
   saveWishlists(wishlists)
   return true
+}
+
+export const updateWishlistUser = (wishlistId, userData) => {
+  try {
+    const wishlists = getAllWishlists()
+    const wishlist = wishlists.find(list => list.id === wishlistId)
+    
+    if (!wishlist) return false
+    
+    wishlist.userData = {
+      ...userData,
+      updatedAt: new Date().toISOString()
+    }
+    
+    saveWishlists(wishlists)
+    return true
+  } catch (error) {
+    console.error('Error updating wishlist user data:', error)
+    return false
+  }
+}
+
+export const generateShareableLink = (wishlistId) => {
+  const wishlist = getWishlistById(wishlistId)
+  if (!wishlist) return null
+
+  if (!wishlist.shareId) {
+    wishlist.shareId = uid()
+    const wishlists = getAllWishlists()
+    const index = wishlists.findIndex(w => w.id === wishlistId)
+    if (index !== -1) {
+      wishlists[index] = wishlist
+      saveWishlists(wishlists)
+    }
+  }
+
+  return `${window.location.origin}/share/${wishlist.shareId}`
+}
+
+export const getWishlistByShareId = (shareId) => {
+  const wishlists = getAllWishlists()
+  return wishlists.find(list => list.shareId === shareId)
 } 
