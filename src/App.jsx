@@ -8,6 +8,7 @@ import WishlistDetails from './components/WishlistDetails'
 import AddItemsPage from './components/AddItemsPage'
 import SharedWishlist from './components/SharedWishlist'
 import SharedWishlistViewer from './components/SharedWishlistViewer'
+import NotFound from './components/NotFound'
 import './App.css'
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/wishlist/:id" element={<WishlistDetails />} />
         <Route path="/wishlist/:id/add-items" element={<AddItemsPage />} />
         <Route path="/share/:shareId" element={<SharedWishlistViewer />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )
