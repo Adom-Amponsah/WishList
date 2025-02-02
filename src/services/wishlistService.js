@@ -1,23 +1,62 @@
 // Wishlist management service
 
-export const createWishlist = (name, eventType) => {
-  const wishlists = getAllWishlists()
-  const newWishlist = {
-    id: Date.now().toString(),
-    name,
-    eventType,
-    createdAt: new Date().toISOString(),
-    items: [],
-    totalPrice: 0
+const WISHLISTS_STORAGE_KEY = 'wishlists'
+
+// Helper function to get all wishlists from localStorage
+const getAllWishlists = () => {
+  try {
+    const wishlists = localStorage.getItem(WISHLISTS_STORAGE_KEY)
+    if (!wishlists) return []
+    
+    const parsedWishlists = JSON.parse(wishlists)
+    return Array.isArray(parsedWishlists) ? parsedWishlists : []
+  } catch (error) {
+    console.error('Error parsing wishlists from localStorage:', error)
+    return []
   }
-  
-  wishlists.push(newWishlist)
-  localStorage.setItem('wishlists', JSON.stringify(wishlists))
-  return newWishlist
 }
 
-export const getAllWishlists = () => {
-  return JSON.parse(localStorage.getItem('wishlists') || '[]')
+// Helper function to save all wishlists to localStorage
+const saveWishlists = (wishlists) => {
+  if (!Array.isArray(wishlists)) {
+    console.error('Attempted to save non-array wishlists')
+    return false
+  }
+  localStorage.setItem(WISHLISTS_STORAGE_KEY, JSON.stringify(wishlists))
+  return true
+}
+
+export const createWishlist = (name, eventType) => {
+  try {
+    const wishlists = getAllWishlists()
+    const newWishlist = {
+      id: Date.now().toString(),
+      name,
+      eventType,
+      createdAt: new Date().toISOString(),
+      items: [],
+      totalPrice: 0
+    }
+    
+    const updatedWishlists = [...wishlists, newWishlist]
+    const saved = saveWishlists(updatedWishlists)
+    if (!saved) {
+      throw new Error('Failed to save wishlist')
+    }
+    return newWishlist
+  } catch (error) {
+    console.error('Error creating wishlist:', error)
+    throw error
+  }
+}
+
+export const getAllWishlistsForUser = () => {
+  try {
+    return getAllWishlists()
+  } catch (error) {
+    console.error('Error getting all wishlists:', error)
+    return []
+  }
 }
 
 export const getWishlistById = (id) => {
@@ -32,50 +71,54 @@ export const addItemToWishlist = (wishlistId, item) => {
   if (!wishlist) return false
   
   // Check if item already exists in this wishlist
-  if (wishlist.items.some(existingItem => existingItem.sku === item.sku)) {
+  if (wishlist.items.some(existingItem => existingItem.id === item.id)) {
     return false
   }
   
-  // Extract first price if multiple prices exist
-  const priceStr = item.price.split('₵')[1].split('₵')[0].trim()
-  const price = parseFloat(priceStr.replace(',', ''))
-  
-  // Add item with processed price
+  // Process the item from Supabase format
   const processedItem = {
-    ...item,
-    price: `₵${price.toFixed(2)}`
+    id: item.id,
+    title: item.title,
+    price: item.price,
+    image_url: item.image_url,
+    url: item.product_url,
+    category: item.category,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
   
   wishlist.items.push(processedItem)
   wishlist.totalPrice = wishlist.items.reduce((sum, currentItem) => {
-    const itemPrice = parseFloat(currentItem.price.replace('₵', '').replace(',', ''))
-    return sum + itemPrice
+    return sum + currentItem.price
   }, 0)
   
-  localStorage.setItem('wishlists', JSON.stringify(wishlists))
+  saveWishlists(wishlists)
   return true
 }
 
-export const removeItemFromWishlist = (wishlistId, itemSku) => {
+export const removeItemFromWishlist = (wishlistId, itemId) => {
   const wishlists = getAllWishlists()
   const wishlist = wishlists.find(list => list.id === wishlistId)
   
   if (!wishlist) return false
+
+  wishlist.items = wishlist.items.filter(item => item.id !== itemId)
+  wishlist.totalPrice = wishlist.items.reduce((sum, item) => sum + Number(item.price), 0)
   
-  wishlist.items = wishlist.items.filter(item => item.sku !== itemSku)
-  wishlist.totalPrice = wishlist.items.reduce((sum, item) => {
-    const price = parseFloat(item.price.replace('₵', '').replace(',', ''))
-    return sum + price
-  }, 0)
-  
-  localStorage.setItem('wishlists', JSON.stringify(wishlists))
+  saveWishlists(wishlists)
   return true
 }
 
-export const deleteWishlist = (wishlistId) => {
-  const wishlists = getAllWishlists()
-  const updatedWishlists = wishlists.filter(list => list.id !== wishlistId)
-  localStorage.setItem('wishlists', JSON.stringify(updatedWishlists))
+export const deleteWishlist = (id) => {
+  try {
+    const wishlists = getAllWishlists()
+    const updatedWishlists = wishlists.filter(wishlist => wishlist.id !== id)
+    saveWishlists(updatedWishlists)
+    return true
+  } catch (error) {
+    console.error('Error deleting wishlist:', error)
+    return false
+  }
 }
 
 export const updateWishlistName = (wishlistId, newName) => {
@@ -85,6 +128,6 @@ export const updateWishlistName = (wishlistId, newName) => {
   if (!wishlist) return false
   
   wishlist.name = newName
-  localStorage.setItem('wishlists', JSON.stringify(wishlists))
+  saveWishlists(wishlists)
   return true
 } 

@@ -98,7 +98,7 @@ export default function SavedItems() {
                   rel="noopener noreferrer"
                   className="flex-1 px-4 py-2 bg-blue-500 text-white text-center rounded hover:bg-blue-600"
                 >
-                  View on Melcom
+                  View 
                 </a>
                 <button
                   onClick={() => removeItem(item.sku)}

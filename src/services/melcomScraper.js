@@ -16,86 +16,83 @@ export const MELCOM_CATEGORIES = [
 ]
 
 // Using ScraperOps proxy service with additional parameters
-const PROXY_URL = 'https://proxy.scrapeops.io/v1/?api_key=a0a77055-fbff-4791-bb11-9cb771f81e98&render_js=true&country=gh&url='
+const PROXY_URL = 'https://proxy.scrapeops.io/v1/?api_key=b6e80457-1da0-4df5-a7ca-ff210232b69c&render_js=true&country=gh&url='
 
 const ITEMS_PER_PAGE = 12
 const MAX_PAGES = 3  // Maximum number of pages to fetch
 
-export const scrapeCategory = async (categoryId, page = 1) => {
+export const scrapeCategory = async (categoryId = '', page = 1, searchUrl = '') => {
   try {
-    const url = `https://melcom.com/categories.html?cat=${categoryId}&p=${page}`
+    // Use search URL if provided, otherwise use category URL
+    const url = searchUrl || `https://melcom.com/categories/${categoryId}?p=${page}`
     console.log('Fetching URL:', url)
     
     const encodedUrl = encodeURIComponent(url)
-    console.log('Encoded URL:', `${PROXY_URL}${encodedUrl}`)
+    console.log('Making request to:', `${PROXY_URL}${encodedUrl}`)
     
     const response = await axios.get(`${PROXY_URL}${encodedUrl}`, {
       headers: {
         'accept': 'application/json'
-      },
-      timeout: 60000
+      }
     })
-    
-    // Check if we got an actual HTML response
-    if (!response.data.includes('container-products-switch')) {
-      console.log('Did not receive expected product page HTML')
-      console.log('Response data preview:', response.data.substring(0, 1000))
-      throw new Error('Failed to get product page content')
+
+    if (!response.data) {
+      throw new Error('No data received from proxy')
     }
-    
+
     const $ = cheerio.load(response.data)
-    
-    // Debug HTML structure
-    console.log('Found products wrapper:', $('.products.wrapper.grid.products-grid').length > 0)
-    console.log('Found products container:', $('.container-products-switch').length > 0)
-    const productCount = $('.item.product.product-item').length
-    console.log('Found product items:', productCount)
-    
+
+    // Get total items count
+    const totalItemsText = $('.toolbar-amount .toolbar-number').first().text()
+    const totalItems = parseInt(totalItemsText) || 0
+
+    // Get products
     const products = []
-
-    // Updated selector to match the actual HTML structure from Melcom
-    $('.products.wrapper.grid.products-grid .container-products-switch li.item.product.product-item').each((index, element) => {
-      const $el = $(element)
+    $('.product-item').each((i, el) => {
+      const $el = $(el)
       
-      // Get product link and details
-      const productLink = $el.find('a.product.photo.product-item-photo')
-      const url = productLink.attr('href')
-      const title = $el.find('.product.name.product-item-name .product-item-link').text().trim()
+      // Get product details
+      const title = $el.find('.product-item-link').text().trim()
+      const link = $el.find('.product-item-link').attr('href')
       const image = $el.find('.product-image-photo').first().attr('src')
-      const price = $el.find('.price-box.price-final_price .price').text().trim()
-      const sku = $el.find('form[data-role="tocart-form"]').attr('data-product-sku')
+      const category = $el.find('.product-category a').text().trim()
+      const sku = $el.find('[data-product-sku]').attr('data-product-sku')
 
-      if (title && price && image && url) {
+      // Get prices
+      const specialPrice = $el.find('.special-price .price').text().trim()
+      const oldPrice = $el.find('.old-price .price').text().trim()
+      
+      // Format price display
+      let price = specialPrice || oldPrice
+      let originalPrice = specialPrice ? oldPrice : null
+
+      // Only add if we have the minimum required data
+      if (title && (specialPrice || oldPrice)) {
         products.push({
           title,
-          price,
+          link,
           image,
-          url,
+          category,
           sku,
-          originalPrice: price,
-          category: MELCOM_CATEGORIES.find(cat => cat.id === categoryId)?.name
+          price,
+          originalPrice
         })
       }
     })
 
-    console.log(`Page ${page}: Found ${products.length} products`)
-
-    // Simplified pagination logic - just check if we have products and are under MAX_PAGES
+    // Get pagination info
+    const hasNextPage = products.length === 32 // Based on default items per page
+    
     return {
       products,
       pagination: {
         currentPage: page,
-        hasNextPage: products.length > 0 && page < MAX_PAGES,
-        hasPreviousPage: page > 1
+        hasNextPage,
+        totalItems
       }
     }
   } catch (error) {
-    console.error('Scraping error:', {
-      message: error.message,
-      response: error.response?.status,
-      data: error.response?.data?.substring(0, 200),
-      url: error.config?.url
-    })
+    console.error('Error scraping category:', error)
     throw error
   }
 }

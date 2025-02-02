@@ -1,257 +1,230 @@
-import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { FaRing, FaBaby, FaBirthdayCake, FaGraduationCap, FaArrowRight } from 'react-icons/fa';
-import { GiPartyPopper } from 'react-icons/gi';
-import { useRef, useEffect, useState } from 'react';
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 
-// Define image paths (when using public folder in Vite)
-const events = [
+// Event types with their images
+const eventTypes = [
   {
-    id: 'wedding',
-    title: 'Wedding',
-    subtitle: 'Registry',
-    icon: <FaRing className="text-4xl" />,
-    image: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80',
-    color: 'from-rose-500/30 to-pink-600/30',
-    description: 'Create your dream wedding registry',
+    name: 'Birthday',
+    image: 'https://images.unsplash.com/photo-1558636508-e0db3814bd1d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
+    properties: 'Celebrate special days'
   },
   {
-    id: 'baby-shower',
-    title: 'Baby',
-    subtitle: 'Shower',
-    icon: <FaBaby className="text-4xl" />,
-    image: 'https://images.unsplash.com/photo-1438962136829-452260720431?auto=format&fit=crop&w=2070&q=80',
-    color: 'from-sky-500/30 to-blue-600/30',
-    description: 'Welcome your little one with love',
+    name: 'Wedding',
+    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1469&q=80',
+    properties: 'Plan your perfect day'
   },
   {
-    id: 'birthday',
-    title: 'Birthday',
-    subtitle: 'Celebration',
-    icon: <FaBirthdayCake className="text-4xl" />,
-    image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1470&q=80',
-    color: 'from-purple-500/30 to-indigo-600/30',
-    description: 'Celebrate your special day',
+    name: 'Baby Shower',
+    image: 'https://images.unsplash.com/photo-1438962136829-452260720431?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    properties: 'Welcome new arrivals'
   },
   {
-    id: 'graduation',
-    title: 'Graduation',
-    subtitle: 'Party',
-    icon: <FaGraduationCap className="text-4xl" />,
-    image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1470&q=80',
-    color: 'from-emerald-500/30 to-green-600/30',
-    description: 'Mark your academic achievement',
+    name: 'House Warming',
+    image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1473&q=80',
+    properties: 'Make a house a home'
   },
   {
-    id: 'other',
-    title: 'Custom',
-    subtitle: 'Events',
-    icon: <GiPartyPopper className="text-4xl" />,
-    image: 'https://images.unsplash.com/photo-1517488629431-6427e0ee1e5f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    color: 'from-amber-500/30 to-orange-600/30',
-    description: 'Create a custom event wishlist',
+    name: 'Graduation',
+    image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
+    properties: 'Celebrate achievements'
   },
-];
+  {
+    name: 'Christmas',
+    image: 'https://images.unsplash.com/photo-1543589923-78e35f728335?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
+    properties: 'Spread holiday cheer'
+  },
+  {
+    name: 'Anniversary',
+    image: 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
+    properties: 'Celebrate your love'
+  },
+  {
+    name: 'Other',
+    image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
+    properties: 'Create custom events'
+  }
+]
 
-const EventSelection = () => {
-  const navigate = useNavigate();
-  const containerRef = useRef(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  
-  // Smooth spring-based animation for scrolling
-  const x = useSpring(0, {
-    stiffness: 100,
-    damping: 30,
-    mass: 1
-  });
+// Scroll-triggered animation component
+const ScrollAnimatedSection = ({ children, className = '' }) => {
+  const sectionRef = React.useRef(null);
+  const [isVisible, setIsVisible] = React.useState(false);
 
-  // Handle horizontal scroll
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-  
-    const handleWheel = (e) => {
-      e.preventDefault();
-      
-      const cardWidth = 900; // Matches your card width
-      const cardGap = 20; // Adjust this to match your gap between cards
-      const totalCardWidth = cardWidth + cardGap;
-      
-      const scrollAmount = (e.deltaX || e.deltaY) * 2;
-      const currentX = x.get();
-      
-      // Calculate max scroll dynamically
-      const maxScroll = -(events.length * totalCardWidth - container.offsetWidth);
-      
-      let newX = currentX - scrollAmount;
-      newX = Math.max(maxScroll, Math.min(0, newX));
-      
-      x.set(newX);
-  
-      // Recalculate active index based on new scroll position
-      const activeIdx = Math.floor(Math.abs(newX) / totalCardWidth);
-      setActiveIndex(Math.min(events.length - 1, Math.max(0, activeIdx)));
-    };
-  
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    return () => container.removeEventListener('wheel', handleWheel);
-  }, [x]);
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px'
+      }
+    );
 
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') {
-        setActiveIndex(prev => Math.max(0, prev - 1));
-      } else if (e.key === 'ArrowRight') {
-        setActiveIndex(prev => Math.min(events.length - 1, prev + 1));
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
       }
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Update x position when activeIndex changes
-  useEffect(() => {
-    x.set(-activeIndex * 420);
-  }, [activeIndex, x]);
-
   return (
-    <div className="fixed inset-0 bg-black">
-      {/* Header */}
-      <motion.h1
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="absolute top-8 left-0 right-0 text-5xl md:text-6xl font-bold text-white px-4 text-center z-10"
-      >
-        Choose Your Event Type
-      </motion.h1>
-
-      {/* Cards Container */}
-      <div
-        ref={containerRef}
-        className="absolute inset-0 overflow-hidden"
-      >
-        <motion.div
-          style={{ x }}
-          className="absolute inset-0 flex space-x-5 px-[15vw] items-center"
-        >
-          {events.map((event, index) => (
-            <motion.div
-              key={event.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ 
-                opacity: 1, 
-                scale: activeIndex === index ? 1 : 0.9,
-                y: activeIndex === index ? 0 : 20
-              }}
-              transition={{ duration: 0.5 }}
-              className="relative flex-shrink-0 w-[400px] h-[80vh] rounded-3xl overflow-hidden group"
-              onClick={() => setActiveIndex(index)}
-            >
-              {/* Background Image */}
-              <motion.div
-                className="absolute inset-0"
-                animate={{ 
-                  scale: activeIndex === index ? 1.05 : 1
-                }}
-                transition={{ duration: 0.4 }}
-              >
-                <img
-                  src={event.image}
-                  alt={event.title}
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
-
-              {/* Gradient Overlay */}
-              <div className={`absolute inset-0 bg-gradient-to-b ${event.color} 
-                backdrop-blur-[2px] opacity-90 transition-opacity duration-300
-                ${activeIndex === index ? 'opacity-75' : 'opacity-90'}`}
-              />
-
-              {/* Content */}
-              <div className="absolute inset-0 p-8 flex flex-col justify-between">
-                {/* Top Section */}
-                <div>
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: index * 0.2 }}
-                    className="bg-white/10 backdrop-blur-sm w-16 h-16 rounded-full flex items-center justify-center mb-6"
-                  >
-                    {event.icon}
-                  </motion.div>
-                  <motion.h2
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.2 + 0.1 }}
-                    className="text-5xl font-bold text-white mb-2"
-                  >
-                    {event.title}
-                  </motion.h2>
-                  <motion.h3
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.2 + 0.2 }}
-                    className="text-3xl font-light text-white/80"
-                  >
-                    {event.subtitle}
-                  </motion.h3>
-                </div>
-
-                {/* Center Content */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: index * 0.2 + 0.3 }}
-                  className="flex-1 flex items-center"
-                >
-                  <p className="text-xl text-white/90 max-w-[90%] text-center mx-auto">
-                    {event.description}
-                  </p>
-                </motion.div>
-
-                {/* Show Create button only for active card */}
-                {activeIndex === index && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/create/${event.id}`);
-                    }}
-                    className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm 
-                      px-6 py-4 rounded-full text-white font-semibold 
-                      flex items-center justify-center space-x-2
-                      transition-all duration-300"
-                  >
-                    <span>Create Wishlist</span>
-                    <FaArrowRight />
-                  </motion.button>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* Navigation Dots */}
-      <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-2">
-        {events.map((_, index) => (
-          <motion.button
-            key={index}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              activeIndex === index ? 'w-8 bg-white' : 'bg-white/50'
-            }`}
-            onClick={() => setActiveIndex(index)}
-          />
-        ))}
-      </div>
+    <div ref={sectionRef} className={className}>
+      {isVisible && children}
     </div>
   );
 };
 
-export default EventSelection;
+export default function EventSelection() {
+  const navigate = useNavigate()
+
+  const handleEventSelect = (eventType) => {
+    // Navigate to the wishlist creator with the selected event type
+    navigate(`/create/${eventType.toLowerCase().replace(/\s+/g, '-')}`)
+  }
+
+  return (
+    <div className="py-12 bg-gray-50">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Event Type</h2>
+          <p className="text-xl text-gray-600">Select the type of event you're creating a wishlist for</p>
+        </div>
+
+        {/* Event Cards with Horizontal Scroll on Desktop, Vertical on Mobile */}
+        <ScrollAnimatedSection className="relative">
+          {/* Mobile View */}
+          <div className="md:hidden space-y-6 px-4">
+            {eventTypes.map((event, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="relative rounded-2xl overflow-hidden cursor-pointer h-[200px] group"
+                onClick={() => handleEventSelect(event.name)}
+              >
+                <img
+                  src={event.image}
+                  alt={event.name}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {event.name}
+                  </h3>
+                  <span className="text-sm font-medium text-white/80">
+                    {event.properties}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Desktop View - Keep existing horizontal scroll */}
+          <div className="hidden md:block overflow-x-auto scrollbar-hide">
+            <motion.div 
+              className="flex gap-6 pb-8 relative"
+              drag="x"
+              dragConstraints={{ right: 0, left: -1600 }}
+              whileTap={{ cursor: "grabbing" }}
+              style={{ cursor: "grab" }}
+            >
+              {Array.from({ length: Math.ceil(eventTypes.length / 3) }).map((_, groupIndex) => (
+                <motion.div
+                  key={groupIndex}
+                  initial={{ opacity: 0, x: 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{
+                    duration: 0.5,
+                    delay: groupIndex * 0.2,
+                    ease: "easeOut"
+                  }}
+                  className="flex-shrink-0 flex gap-6"
+                >
+                  <div 
+                    className="relative rounded-2xl overflow-hidden cursor-pointer w-[300px] h-[600px] group"
+                    onClick={() => handleEventSelect(eventTypes[groupIndex * 3]?.name)}
+                  >
+                    <img
+                      src={eventTypes[groupIndex * 3]?.image}
+                      alt={eventTypes[groupIndex * 3]?.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <h3 className="text-2xl font-bold text-white mb-2">
+                        {eventTypes[groupIndex * 3]?.name}
+                      </h3>
+                      <span className="text-sm font-medium text-white/80">
+                        {eventTypes[groupIndex * 3]?.properties}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Stacked cards container */}
+                  <div className="flex flex-col gap-6">
+                    {/* Top card */}
+                    <div 
+                      className="relative rounded-2xl overflow-hidden cursor-pointer w-[300px] h-[290px] group"
+                      onClick={() => handleEventSelect(eventTypes[groupIndex * 3 + 1]?.name)}
+                    >
+                      <img
+                        src={eventTypes[groupIndex * 3 + 1]?.image}
+                        alt={eventTypes[groupIndex * 3 + 1]?.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-6">
+                        <h3 className="text-xl font-bold text-white mb-2">
+                          {eventTypes[groupIndex * 3 + 1]?.name}
+                        </h3>
+                        <span className="text-sm font-medium text-white/80">
+                          {eventTypes[groupIndex * 3 + 1]?.properties}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bottom card */}
+                    <div 
+                      className="relative rounded-2xl overflow-hidden cursor-pointer w-[300px] h-[290px] group"
+                      onClick={() => handleEventSelect(eventTypes[groupIndex * 3 + 2]?.name)}
+                    >
+                      <img
+                        src={eventTypes[groupIndex * 3 + 2]?.image}
+                        alt={eventTypes[groupIndex * 3 + 2]?.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-6">
+                        <h3 className="text-xl font-bold text-white mb-2">
+                          {eventTypes[groupIndex * 3 + 2]?.name}
+                        </h3>
+                        <span className="text-sm font-medium text-white/80">
+                          {eventTypes[groupIndex * 3 + 2]?.properties}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </ScrollAnimatedSection>
+      </div>
+    </div>
+  )
+}
