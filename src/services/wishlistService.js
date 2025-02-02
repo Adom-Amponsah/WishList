@@ -173,12 +173,20 @@ export const updateWishlistUser = (wishlistId, userData) => {
     
     if (!wishlist) return false
     
+    // Generate shareId if it doesn't exist
+    if (!wishlist.shareId) {
+      wishlist.shareId = uid()
+    }
+    
     wishlist.userData = {
       ...userData,
       updatedAt: new Date().toISOString()
     }
     
+    // Store the updated wishlist in both localStorage and sessionStorage
     saveWishlists(wishlists)
+    sessionStorage.setItem(`shared_wishlist_${wishlist.shareId}`, JSON.stringify(wishlist))
+    
     return true
   } catch (error) {
     console.error('Error updating wishlist user data:', error)
@@ -190,6 +198,7 @@ export const generateShareableLink = (wishlistId) => {
   const wishlist = getWishlistById(wishlistId)
   if (!wishlist) return null
 
+  // Generate a unique shareId if it doesn't exist
   if (!wishlist.shareId) {
     wishlist.shareId = uid()
     const wishlists = getAllWishlists()
@@ -204,6 +213,24 @@ export const generateShareableLink = (wishlistId) => {
 }
 
 export const getWishlistByShareId = (shareId) => {
-  const wishlists = getAllWishlists()
-  return wishlists.find(list => list.shareId === shareId)
+  try {
+    const wishlists = getAllWishlists()
+    const wishlist = wishlists.find(list => list.shareId === shareId)
+    
+    if (!wishlist) {
+      // Try to get from session storage as a backup
+      const sessionWishlist = sessionStorage.getItem(`shared_wishlist_${shareId}`)
+      if (sessionWishlist) {
+        return JSON.parse(sessionWishlist)
+      }
+      return null
+    }
+    
+    // Store in session storage for persistence
+    sessionStorage.setItem(`shared_wishlist_${shareId}`, JSON.stringify(wishlist))
+    return wishlist
+  } catch (error) {
+    console.error('Error getting shared wishlist:', error)
+    return null
+  }
 } 
