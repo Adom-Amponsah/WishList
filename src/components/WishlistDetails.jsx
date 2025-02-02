@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getWishlistById, removeItemFromWishlist, deleteWishlist, updateWishlistUser } from '../services/wishlistService'
+import { encodeWishlistToURL } from '../utils/wishlistUrlUtils'
 import toast from 'react-hot-toast'
 import { FiCalendar, FiGift, FiShare2, FiExternalLink, FiTrash2, FiX, FiLink } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -19,6 +20,9 @@ export default function WishlistDetails() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [shareableLink, setShareableLink] = useState('')
+  const [isSharing, setIsSharing] = useState(false)
+  const [shareSuccess, setShareSuccess] = useState('')
+  const [shareError, setShareError] = useState('')
 
   useEffect(() => {
     // Scroll to top when component mounts
@@ -81,14 +85,97 @@ export default function WishlistDetails() {
     }
   };
 
-  const copyToClipboard = async () => {
+  const handleShare = async () => {
     try {
-      await navigator.clipboard.writeText(shareableLink)
-      toast.success('Link copied to clipboard!')
-    } catch (err) {
-      toast.error('Failed to copy link')
+      setIsSharing(true);
+      
+      // Create standalone HTML page
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${wishlist.name} - Wishlist</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; background: #f9fafb; }
+            .header { background: linear-gradient(to right, #2563eb, #7c3aed); color: white; padding: 20px; }
+            .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+            .user-info { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+            .item-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            .item-image { aspect-ratio: 1; background: #f3f4f6; }
+            .item-image img { width: 100%; height: 100%; object-fit: contain; }
+            .item-details { padding: 15px; }
+            .price { color: #2563eb; font-weight: bold; font-size: 1.1em; }
+            .contact { color: #2563eb; text-decoration: none; }
+            .contact:hover { text-decoration: underline; }
+            .total { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="container">
+              <h1>${wishlist.name}</h1>
+              <p>${wishlist.eventType} • Created ${new Date().toLocaleDateString()}</p>
+            </div>
+          </div>
+
+          <div class="container">
+            <div class="user-info">
+              <h2>Wishlist Owner</h2>
+              <p>${userData.name}</p>
+              ${userData.email ? `<p><a href="mailto:${userData.email}" class="contact">${userData.email}</a></p>` : ''}
+              ${userData.phone ? `<p><a href="tel:${userData.phone}" class="contact">${userData.phone}</a></p>` : ''}
+            </div>
+
+            <div class="items-grid">
+              ${wishlist.items.map(item => `
+                <div class="item-card">
+                  ${item.image_url ? `
+                    <div class="item-image">
+                      <img src="${item.image_url}" alt="${item.title}">
+                    </div>
+                  ` : ''}
+                  <div class="item-details">
+                    <h3>${item.title}</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span class="price">₵${(item.price * (item.quantity || 1)).toLocaleString()}</span>
+                      ${item.quantity > 1 ? `<span>Quantity: ${item.quantity}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="total">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 1.2em;">Total</span>
+                <span style="font-size: 1.5em; color: #2563eb; font-weight: bold;">
+                  ₵${wishlist.totalPrice.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      // Create data URL
+      const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(dataUrl);
+      setShareSuccess('Link copied to clipboard!');
+      toast.success('Link copied to clipboard!');
+    } catch (error) {
+      setShareError('Failed to generate share link');
+      console.error('Share error:', error);
+      toast.error('Failed to generate share link');
+    } finally {
+      setIsSharing(false);
     }
-  }
+  };
 
   if (!wishlist) {
     return (
@@ -491,7 +578,7 @@ export default function WishlistDetails() {
                       className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600"
                     />
                     <button
-                      onClick={copyToClipboard}
+                      onClick={handleShare}
                       className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
                       Copy

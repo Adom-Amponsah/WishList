@@ -10,6 +10,7 @@ import {
   where,
   getDocs
 } from 'firebase/firestore';
+import { encodeWishlistToURL } from '../utils/wishlistUrlUtils';
 
 const WISHLISTS_STORAGE_KEY = 'wishlists'
 const SHARED_WISHLISTS_KEY = 'shared_wishlists'
@@ -203,47 +204,19 @@ export const updateWishlistUser = (wishlistId, userData) => {
       updatedAt: new Date().toISOString()
     };
 
-    // Create a minimal version of the wishlist for sharing
-    const shareableData = {
-      name: wishlist.name,
-      eventType: wishlist.eventType,
-      items: wishlist.items.map(item => ({
-        id: item.id,
-        title: item.title,
-        price: item.price,
-        quantity: item.quantity,
-        image_url: item.image_url,
-        notes: item.notes
-      })),
-      userData: {
-        name: userData.name,
-        email: userData.email,
-        phone: userData.phone
-      },
-      sharedAt: new Date().toISOString()
-    };
-
-    // Encode the wishlist data
-    const encodedData = btoa(encodeURIComponent(JSON.stringify(shareableData)));
-    
     // Update the wishlist in localStorage
     const updatedWishlists = wishlists.map(list => 
       list.id === wishlistId ? wishlist : list
     );
+    saveWishlists(updatedWishlists);
 
-    const saved = saveWishlists(updatedWishlists);
-    if (!saved) {
-      console.error('Failed to save updated wishlists');
-      return null;
-    }
-
-    // Generate and return the shareable link with encoded data
-    const shareableLink = `${window.location.origin}/share/${encodedData}`;
-    console.log('Generated shareable link with encoded data');
+    // Generate the URL with encoded wishlist data
+    const shareableUrl = window.location.origin + encodeWishlistToURL(wishlist, userData);
+    console.log('Generated shareable URL:', shareableUrl);
     
-    return shareableLink;
+    return shareableUrl;
   } catch (error) {
-    console.error('Error updating wishlist user data:', error);
+    console.error('Error generating wishlist URL:', error);
     return null;
   }
 };
