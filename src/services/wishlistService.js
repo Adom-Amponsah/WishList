@@ -1,5 +1,16 @@
 // Wishlist management service
 
+import { db } from '../firebase';
+import { 
+  collection, 
+  addDoc, 
+  getDoc, 
+  doc,
+  query,
+  where,
+  getDocs
+} from 'firebase/firestore';
+
 const WISHLISTS_STORAGE_KEY = 'wishlists'
 const SHARED_WISHLISTS_KEY = 'shared_wishlists'
 
@@ -171,23 +182,6 @@ export const updateWishlistName = (wishlistId, newName) => {
   return true
 }
 
-const saveSharedWishlist = (wishlist) => {
-  try {
-    // Get existing shared wishlists
-    const sharedWishlists = JSON.parse(localStorage.getItem(SHARED_WISHLISTS_KEY) || '{}')
-    
-    // Add or update this wishlist
-    sharedWishlists[wishlist.shareId] = wishlist
-    
-    // Save back to localStorage
-    localStorage.setItem(SHARED_WISHLISTS_KEY, JSON.stringify(sharedWishlists))
-    return true
-  } catch (error) {
-    console.error('Error saving shared wishlist:', error)
-    return false
-  }
-}
-
 export const updateWishlistUser = (wishlistId, userData) => {
   try {
     const wishlists = getAllWishlists()
@@ -212,7 +206,6 @@ export const updateWishlistUser = (wishlistId, userData) => {
     
     // Save to both regular and shared storage
     saveWishlists(updatedWishlists)
-    saveSharedWishlist(wishlist)
     
     return true
   } catch (error) {
@@ -224,43 +217,73 @@ export const updateWishlistUser = (wishlistId, userData) => {
 export const generateShareableLink = (wishlistId) => {
   try {
     const wishlist = getWishlistById(wishlistId)
-    if (!wishlist) return null
+    if (!wishlist || !wishlist.shareId) return null
 
-    // Generate a unique shareId if it doesn't exist
-    if (!wishlist.shareId) {
-      wishlist.shareId = generateId()
-      
-      const wishlists = getAllWishlists()
-      const updatedWishlists = wishlists.map(list => 
-        list.id === wishlistId ? wishlist : list
-      )
-      saveWishlists(updatedWishlists)
-    }
-
-    // Save to shared storage
-    saveSharedWishlist(wishlist)
-
-    return `${window.location.origin}/share/${wishlist.shareId}`
+    return `${window.location.origin}/wishlist/share/${wishlist.shareId}`
   } catch (error) {
     console.error('Error generating shareable link:', error)
     return null
   }
 }
 
-export const getWishlistByShareId = (shareId) => {
+export const shareWishlist = async (wishlistId, userData) => {
   try {
-    // First try to get from regular wishlists
-    const wishlists = getAllWishlists()
-    const wishlist = wishlists.find(list => list.shareId === shareId)
-    if (wishlist) {
-      return wishlist
+    const wishlist = getWishlistById(wishlistId);
+    if (!wishlist) {
+      throw new Error('Wishlist not found');
     }
-    
-    // If not found, try to get from shared wishlists storage
-    const sharedWishlists = JSON.parse(localStorage.getItem(SHARED_WISHLISTS_KEY) || '{}')
-    return sharedWishlists[shareId] || null
+
+    // Prepare the wishlist data for Firebase
+    const wishlistData = {
+      ...wishlist,
+      userData,
+      sharedAt: new Date().toISOString(),
+      originalId: wishlist.id
+    };
+
+    // Add to Firebase
+    const docRef = await addDoc(collection(db, 'shared_wishlists'), wishlistData);
+    const shareId = docRef.id;
+
+    // Update local wishlist with the Firebase document ID as shareId
+    const wishlists = getAllWishlists();
+    const updatedWishlists = wishlists.map(w => {
+      if (w.id === wishlistId) {
+        return { ...w, shareId };
+      }
+      return w;
+    });
+    saveWishlists(updatedWishlists);
+
+    // Generate and log the shareable link
+    const shareableLink = `${window.location.origin}/wishlist/share/${shareId}`;
+    console.log('Generated shareable link:', shareableLink);
+    console.log('Firebase Share ID:', shareId);
+    console.log('Wishlist data:', wishlistData);
+
+    return shareableLink;
   } catch (error) {
-    console.error('Error getting shared wishlist:', error)
-    return null
+    console.error('Error sharing wishlist:', error);
+    throw error;
   }
-} 
+};
+
+export const getSharedWishlist = async (shareId) => {
+  try {
+    const docRef = doc(db, 'shared_wishlists', shareId);
+    const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) {
+      return null;
+    }
+
+    const wishlistData = docSnap.data();
+    return {
+      ...wishlistData,
+      id: docSnap.id // Use Firebase document ID as the wishlist ID
+    };
+  } catch (error) {
+    console.error('Error getting shared wishlist:', error);
+    throw error;
+  }
+}; 
