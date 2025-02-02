@@ -2,8 +2,14 @@
   command = "npm run build"
   publish = "dist"
 
+# Specific redirect for share routes
+[[redirects]]
+  from = "/share/*"
+  to = "/index.html"
+  status = 200
+
+# General redirect for all other routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200
-  force = true 
+  status = 200 
