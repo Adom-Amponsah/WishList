@@ -2,11 +2,12 @@
   command = "npm run build"
   publish = "dist"
 
-# Specific redirect for share routes
+# Specific redirect for shared wishlist pages
 [[redirects]]
-  from = "/share/*"
+  from = "/wishlist/*/shared"
   to = "/index.html"
   status = 200
+  force = true
 
 # General redirect for all other routes
 [[redirects]]
