@@ -41,7 +41,7 @@ export default function App() {
         <Route path="/my-wishlists" element={<MyWishlists />} />
         <Route path="/wishlist/:id" element={<WishlistDetails />} />
         <Route path="/wishlist/:id/add-items" element={<AddItemsPage />} />
-        <Route path="/share/:shareId" element={<SharedWishlistViewer />} />
+        <Route path="/wishlist/:id/shared" element={<SharedWishlistViewer />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

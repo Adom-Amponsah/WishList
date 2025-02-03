@@ -187,7 +187,7 @@ export const updateWishlistUser = (wishlistId, userData) => {
   try {
     if (!wishlistId || !userData) {
       console.error('Missing wishlistId or userData');
-      return null;
+      return false;
     }
 
     const wishlists = getAllWishlists();
@@ -195,7 +195,7 @@ export const updateWishlistUser = (wishlistId, userData) => {
     
     if (!wishlist) {
       console.error('Wishlist not found:', wishlistId);
-      return null;
+      return false;
     }
 
     // Add user data to wishlist
@@ -208,16 +208,11 @@ export const updateWishlistUser = (wishlistId, userData) => {
     const updatedWishlists = wishlists.map(list => 
       list.id === wishlistId ? wishlist : list
     );
-    saveWishlists(updatedWishlists);
-
-    // Generate the URL with encoded wishlist data
-    const shareableUrl = window.location.origin + encodeWishlistToURL(wishlist, userData);
-    console.log('Generated shareable URL:', shareableUrl);
     
-    return shareableUrl;
+    return saveWishlists(updatedWishlists);
   } catch (error) {
-    console.error('Error generating wishlist URL:', error);
-    return null;
+    console.error('Error updating wishlist user:', error);
+    return false;
   }
 };
 

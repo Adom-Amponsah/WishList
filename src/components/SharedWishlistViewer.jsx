@@ -1,32 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiGift, FiUser, FiMail, FiPhone, FiHome } from 'react-icons/fi';
-import { decodeWishlistFromURL } from '../utils/wishlistUrlUtils';
+import { getWishlistById } from '../services/wishlistService';
 
 export default function SharedWishlistViewer() {
   const [wishlist, setWishlist] = useState(null);
   const [error, setError] = useState(null);
-  const { encodedData } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     try {
-      if (!encodedData) {
-        throw new Error('Invalid wishlist link');
+      const wishlistData = getWishlistById(id);
+      if (!wishlistData) {
+        throw new Error('Wishlist not found');
       }
-
-      // Decode the wishlist data
-      const decodedWishlist = decodeWishlistFromURL(encodedData);
-      
-      if (!decodedWishlist) {
-        throw new Error('Unable to load wishlist data');
-      }
-
-      setWishlist(decodedWishlist);
+      setWishlist(wishlistData);
     } catch (err) {
       setError(err.message);
     }
-  }, [encodedData]);
+  }, [id]);
 
   if (error) {
     return (
@@ -61,18 +54,20 @@ export default function SharedWishlistViewer() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h1 className="text-3xl font-bold mb-2">{wishlist.name}</h1>
-          <p className="text-gray-600 mb-4">{wishlist.eventType} • Shared {new Date(wishlist.sharedAt).toLocaleDateString()}</p>
+          <p className="text-gray-600 mb-4">{wishlist.eventType}</p>
           
-          <div className="border-t pt-4 mt-4">
-            <h2 className="text-xl font-semibold mb-2">Wishlist Owner</h2>
-            <p className="text-gray-700">{wishlist.userData.name}</p>
-            {wishlist.userData.email && (
-              <p><a href={`mailto:${wishlist.userData.email}`} className="text-blue-600 hover:underline">{wishlist.userData.email}</a></p>
-            )}
-            {wishlist.userData.phone && (
-              <p><a href={`tel:${wishlist.userData.phone}`} className="text-blue-600 hover:underline">{wishlist.userData.phone}</a></p>
-            )}
-          </div>
+          {wishlist.userData && (
+            <div className="border-t pt-4 mt-4">
+              <h2 className="text-xl font-semibold mb-2">Wishlist Owner</h2>
+              <p className="text-gray-700">{wishlist.userData.name}</p>
+              {wishlist.userData.email && (
+                <p><a href={`mailto:${wishlist.userData.email}`} className="text-blue-600 hover:underline">{wishlist.userData.email}</a></p>
+              )}
+              {wishlist.userData.phone && (
+                <p><a href={`tel:${wishlist.userData.phone}`} className="text-blue-600 hover:underline">{wishlist.userData.phone}</a></p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

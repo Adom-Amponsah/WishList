@@ -32,6 +32,10 @@ export default function WishlistDetails() {
       const foundWishlist = getWishlistById(id)
       if (foundWishlist) {
         setWishlist(foundWishlist)
+        // If wishlist has userData, populate the form
+        if (foundWishlist.userData) {
+          setUserData(foundWishlist.userData)
+        }
       } else {
         toast.error('Wishlist not found')
         navigate('/my-wishlists')
@@ -70,110 +74,24 @@ export default function WishlistDetails() {
     setIsSubmitting(true);
 
     try {
-      const shareableLink = updateWishlistUser(id, userData);
-      if (!shareableLink) {
-        throw new Error('Failed to generate share link');
+      // Update the wishlist with user data
+      const success = updateWishlistUser(id, userData);
+      if (!success) {
+        throw new Error('Failed to update wishlist');
       }
 
+      // Generate simple shareable link using ID
+      const shareableLink = `${window.location.origin}/wishlist/${id}/shared`;
       setShareableLink(shareableLink);
-      toast.success('Wishlist shared successfully!');
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(shareableLink);
+      toast.success('Link copied to clipboard!');
     } catch (error) {
       console.error('Share error:', error);
       toast.error('Failed to share wishlist');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleShare = async () => {
-    try {
-      setIsSharing(true);
-      
-      // Create standalone HTML page
-      const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${wishlist.name} - Wishlist</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 0; background: #f9fafb; }
-            .header { background: linear-gradient(to right, #2563eb, #7c3aed); color: white; padding: 20px; }
-            .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-            .user-info { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-            .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-            .item-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-            .item-image { aspect-ratio: 1; background: #f3f4f6; }
-            .item-image img { width: 100%; height: 100%; object-fit: contain; }
-            .item-details { padding: 15px; }
-            .price { color: #2563eb; font-weight: bold; font-size: 1.1em; }
-            .contact { color: #2563eb; text-decoration: none; }
-            .contact:hover { text-decoration: underline; }
-            .total { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="container">
-              <h1>${wishlist.name}</h1>
-              <p>${wishlist.eventType} • Created ${new Date().toLocaleDateString()}</p>
-            </div>
-          </div>
-
-          <div class="container">
-            <div class="user-info">
-              <h2>Wishlist Owner</h2>
-              <p>${userData.name}</p>
-              ${userData.email ? `<p><a href="mailto:${userData.email}" class="contact">${userData.email}</a></p>` : ''}
-              ${userData.phone ? `<p><a href="tel:${userData.phone}" class="contact">${userData.phone}</a></p>` : ''}
-            </div>
-
-            <div class="items-grid">
-              ${wishlist.items.map(item => `
-                <div class="item-card">
-                  ${item.image_url ? `
-                    <div class="item-image">
-                      <img src="${item.image_url}" alt="${item.title}">
-                    </div>
-                  ` : ''}
-                  <div class="item-details">
-                    <h3>${item.title}</h3>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="price">₵${(item.price * (item.quantity || 1)).toLocaleString()}</span>
-                      ${item.quantity > 1 ? `<span>Quantity: ${item.quantity}</span>` : ''}
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-
-            <div class="total">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 1.2em;">Total</span>
-                <span style="font-size: 1.5em; color: #2563eb; font-weight: bold;">
-                  ₵${wishlist.totalPrice.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-      
-      // Create data URL
-      const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
-      
-      // Copy to clipboard
-      await navigator.clipboard.writeText(dataUrl);
-      setShareSuccess('Link copied to clipboard!');
-      toast.success('Link copied to clipboard!');
-    } catch (error) {
-      setShareError('Failed to generate share link');
-      console.error('Share error:', error);
-      toast.error('Failed to generate share link');
-    } finally {
-      setIsSharing(false);
     }
   };
 
@@ -500,65 +418,94 @@ export default function WishlistDetails() {
                     Please provide your details to create a shareable wishlist link.
                   </p>
 
-                  <form onSubmit={handleUserDataSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Your Name
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={userData.name}
-                        onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your name"
-                      />
-                    </div>
+                  <div className="space-y-4">
+                    <form onSubmit={handleUserDataSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Your Name
+                        </label>
+                        <input
+                          type="text"
+                          value={userData.name}
+                          onChange={(e) => setUserData({ ...userData, name: e.target.value })}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter your name"
+                          required
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={userData.email}
-                        onChange={(e) => setUserData(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your email"
-                      />
-                    </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email (optional)
+                        </label>
+                        <input
+                          type="email"
+                          value={userData.email}
+                          onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter your email"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone Number
-                      </label>
-                      <input
-                        type="tel"
-                        required
-                        value={userData.phone}
-                        onChange={(e) => setUserData(prev => ({ ...prev, phone: e.target.value }))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your phone number"
-                      />
-                    </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone (optional)
+                        </label>
+                        <input
+                          type="tel"
+                          value={userData.phone}
+                          onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter your phone number"
+                        />
+                      </div>
 
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 
-                               transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {isSubmitting ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      ) : (
-                        <>
-                          <FiShare2 className="w-5 h-5" />
-                          Create Shareable Link
-                        </>
-                      )}
-                    </button>
-                  </form>
+                      <button
+                        type="submit"
+                        disabled={!userData.name.trim() || isSubmitting}
+                        className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600
+                                 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                            Generating Link...
+                          </>
+                        ) : (
+                          <>
+                            <FiLink className="w-5 h-5" />
+                            Generate Link
+                          </>
+                        )}
+                      </button>
+                    </form>
+
+                    {shareableLink && (
+                      <div className="mt-4">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={shareableLink}
+                            className="flex-1 px-3 py-2 bg-gray-50 border rounded-lg text-gray-600"
+                          />
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(shareableLink);
+                              toast.success('Link copied!');
+                            }}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {shareError && (
+                      <p className="text-red-600 text-sm text-center">{shareError}</p>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
@@ -578,7 +525,7 @@ export default function WishlistDetails() {
                       className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600"
                     />
                     <button
-                      onClick={handleShare}
+                      onClick={() => setShowShareModal(false)}
                       className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
                       Copy
