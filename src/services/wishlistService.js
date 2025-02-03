@@ -251,4 +251,41 @@ export const getSharedWishlist = async (shareId) => {
     console.error('Error getting shared wishlist from Firebase:', error);
     throw error;
   }
+};
+
+export const createSharedWishlist = async (wishlist, userData) => {
+  try {
+    if (!wishlist || !userData) {
+      throw new Error('Missing wishlist or user data');
+    }
+
+    // Create the shared wishlist data
+    const sharedData = {
+      name: wishlist.name,
+      eventType: wishlist.eventType,
+      items: wishlist.items.map(item => ({
+        title: item.title,
+        price: item.price,
+        quantity: item.quantity || 1,
+        image_url: item.image_url
+      })),
+      totalPrice: wishlist.totalPrice,
+      userData: {
+        ...userData,
+        updatedAt: new Date().toISOString()
+      },
+      createdAt: new Date().toISOString()
+    };
+
+    // Save to Firebase
+    const docRef = await addDoc(collection(db, 'shared_wishlists'), sharedData);
+    
+    // Generate short link using the document ID
+    const shareableLink = `${window.location.origin}/w/${docRef.id}`;
+    
+    return shareableLink;
+  } catch (error) {
+    console.error('Error creating shared wishlist:', error);
+    throw error;
+  }
 }; 

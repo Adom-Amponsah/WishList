@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getWishlistById, removeItemFromWishlist, deleteWishlist, updateWishlistUser } from '../services/wishlistService'
+import { getWishlistById, removeItemFromWishlist, deleteWishlist, updateWishlistUser, createSharedWishlist } from '../services/wishlistService'
 import { encodeWishlistToURL } from '../utils/wishlistUrlUtils'
 import toast from 'react-hot-toast'
 import { FiCalendar, FiGift, FiShare2, FiExternalLink, FiTrash2, FiX, FiLink } from 'react-icons/fi'
@@ -74,14 +74,8 @@ export default function WishlistDetails() {
     setIsSubmitting(true);
 
     try {
-      // Update the wishlist with user data
-      const success = updateWishlistUser(id, userData);
-      if (!success) {
-        throw new Error('Failed to update wishlist');
-      }
-
-      // Generate simple shareable link using ID
-      const shareableLink = `${window.location.origin}/wishlist/${id}/shared`;
+      // Save wishlist data to Firebase and get shareable link
+      const shareableLink = await createSharedWishlist(wishlist, userData);
       setShareableLink(shareableLink);
 
       // Copy to clipboard
