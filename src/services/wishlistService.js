@@ -261,50 +261,54 @@ export const createSharedWishlist = async (wishlist, userData) => {
       throw new Error('Missing wishlist or user data');
     }
 
-    // Create the shared wishlist data
+    // Save user data to Firebase (just for record keeping)
     const sharedData = {
       name: wishlist.name,
       eventType: wishlist.eventType,
-      items: wishlist.items.map(item => ({
-        title: item.title,
-        price: item.price,
-        quantity: item.quantity || 1,
-        image_url: item.image_url
-      })),
-      totalPrice: wishlist.totalPrice,
       userData: {
         ...userData,
         updatedAt: new Date().toISOString()
       },
       createdAt: new Date().toISOString()
     };
+    await addDoc(collection(db, 'shared_wishlists'), sharedData);
 
-    // Save to Firebase
-    const docRef = await addDoc(collection(db, 'shared_wishlists'), sharedData);
-    
-    // Use the full document ID
-    const fullDocId = docRef.id;
+    // Create minimal data structure for URL
+    const urlData = {
+      n: wishlist.name,
+      e: wishlist.eventType,
+      i: wishlist.items.map(item => ({
+        t: item.title,
+        p: item.price,
+        q: item.quantity || 1,
+        img: item.image_url
+      })),
+      u: {
+        n: userData.name,
+        e: userData.email,
+        p: userData.phone
+      },
+      d: new Date().toISOString()
+    };
 
-    // Create URLs
-    const longUrl = `${window.location.origin}/w/${fullDocId}`;
-    
+    // Encode the data for URL
+    const encodedData = Base64.encodeURI(JSON.stringify(urlData));
+    const longUrl = `${window.location.origin}/w/${encodedData}`;
+
     try {
-      // Try to create short URL
+      // Create short URL using TinyURL
       const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
       if (!response.ok) throw new Error('URL shortening failed');
       const shortUrl = await response.text();
       return {
         shortUrl,
-        longUrl,
-        firebaseId: docRef.id
+        longUrl
       };
     } catch (error) {
-      // If URL shortening fails, return the long URL
       console.warn('URL shortening failed, using long URL:', error);
       return {
         shortUrl: longUrl,
-        longUrl,
-        firebaseId: docRef.id
+        longUrl
       };
     }
   } catch (error) {

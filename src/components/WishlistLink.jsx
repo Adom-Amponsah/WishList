@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiCalendar, FiGift, FiHome } from 'react-icons/fi';
-import { getSharedWishlist } from '../services/wishlistService';
+import { Base64 } from 'js-base64';
 
 export default function WishlistLink() {
   const { encodedData } = useParams();
@@ -10,17 +10,35 @@ export default function WishlistLink() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadWishlist = async () => {
+    const loadWishlist = () => {
       try {
-        const wishlistData = await getSharedWishlist(encodedData);
-        if (wishlistData) {
-          setWishlist(wishlistData);
-        } else {
-          setError('Wishlist not found');
-        }
+        // Decode the URL data
+        const jsonString = Base64.decode(encodedData);
+        const data = JSON.parse(jsonString);
+
+        // Convert the minimal data structure back to full wishlist format
+        const wishlistData = {
+          name: data.n,
+          eventType: data.e,
+          items: data.i.map(item => ({
+            title: item.t,
+            price: item.p,
+            quantity: item.q,
+            image_url: item.img
+          })),
+          userData: {
+            name: data.u.n,
+            email: data.u.e,
+            phone: data.u.p
+          },
+          createdAt: data.d,
+          totalPrice: data.i.reduce((sum, item) => sum + (item.p * item.q), 0)
+        };
+
+        setWishlist(wishlistData);
       } catch (error) {
-        console.error('Error loading wishlist:', error);
-        setError('Failed to load wishlist. Please try again later.');
+        console.error('Error decoding wishlist:', error);
+        setError('Failed to load wishlist. The link might be invalid or corrupted.');
       } finally {
         setLoading(false);
       }
@@ -96,7 +114,7 @@ export default function WishlistLink() {
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900">{item.title}</h3>
                 <p className="text-gray-600">Quantity: {item.quantity}</p>
-                <p className="text-blue-600 font-semibold">${item.price}</p>
+                <p className="text-blue-600 font-semibold">₵{item.price}</p>
               </div>
             </div>
           ))}
@@ -106,7 +124,7 @@ export default function WishlistLink() {
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Total Items: {wishlist.items.length}</span>
             <span className="text-xl font-bold text-gray-900">
-              Total: ${wishlist.totalPrice}
+              Total: ₵{wishlist.totalPrice}
             </span>
           </div>
         </div>
