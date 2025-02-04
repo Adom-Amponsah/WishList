@@ -255,6 +255,75 @@ export const getSharedWishlist = async (shareId) => {
   }
 };
 
+function generateHTML(wishlist, userData) {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${wishlist.name} - Wishlist</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-3xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">${wishlist.name}</h1>
+            <div class="flex items-center gap-4 text-gray-600 mb-4">
+                <div class="flex items-center gap-1">
+                    <span>${new Date().toLocaleDateString()}</span>
+                </div>
+                ${wishlist.eventType ? `
+                <div class="flex items-center gap-1">
+                    <span>${wishlist.eventType}</span>
+                </div>
+                ` : ''}
+            </div>
+            
+            <div class="border-t pt-4">
+                <h2 class="font-semibold text-gray-900 mb-4">Created by ${userData.name}</h2>
+                ${userData.email ? `
+                <p class="text-gray-600 mb-2">Email: ${userData.email}</p>
+                ` : ''}
+                ${userData.phone ? `
+                <p class="text-gray-600">Phone: ${userData.phone}</p>
+                ` : ''}
+            </div>
+        </div>
+
+        <!-- Items -->
+        <div class="space-y-4">
+            ${wishlist.items.map(item => `
+            <div class="bg-white rounded-xl shadow-sm p-4 flex gap-4">
+                ${item.image_url ? `
+                <img src="${item.image_url}" 
+                     alt="${item.title}"
+                     class="w-24 h-24 object-cover rounded-lg">
+                ` : ''}
+                <div class="flex-1">
+                    <h3 class="font-semibold text-gray-900">${item.title}</h3>
+                    <p class="text-gray-600">Quantity: ${item.quantity || 1}</p>
+                    <p class="text-blue-600 font-semibold">₵${item.price}</p>
+                </div>
+            </div>
+            `).join('')}
+        </div>
+
+        <!-- Total -->
+        <div class="mt-6 bg-white rounded-xl shadow-sm p-6">
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Total Items: ${wishlist.items.length}</span>
+                <span class="text-xl font-bold text-gray-900">
+                    Total: ₵${wishlist.items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0)}
+                </span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
 export const createSharedWishlist = async (wishlist, userData) => {
   try {
     if (!wishlist || !userData) {
@@ -273,27 +342,12 @@ export const createSharedWishlist = async (wishlist, userData) => {
     };
     await addDoc(collection(db, 'shared_wishlists'), sharedData);
 
-    // Create minimal data structure for URL
-    const urlData = {
-      n: wishlist.name,
-      e: wishlist.eventType,
-      i: wishlist.items.map(item => ({
-        t: item.title,
-        p: item.price,
-        q: item.quantity || 1,
-        img: item.image_url
-      })),
-      u: {
-        n: userData.name,
-        e: userData.email,
-        p: userData.phone
-      },
-      d: new Date().toISOString()
-    };
-
-    // Encode the data for URL
-    const encodedData = Base64.encodeURI(JSON.stringify(urlData));
-    const longUrl = `${window.location.origin}/w/${encodedData}`;
+    // Generate complete HTML page
+    const htmlContent = generateHTML(wishlist, userData);
+    
+    // Encode the HTML content
+    const encodedHTML = Base64.encodeURI(htmlContent);
+    const longUrl = `${window.location.origin}/w/${encodedHTML}`;
 
     try {
       // Create short URL using TinyURL
