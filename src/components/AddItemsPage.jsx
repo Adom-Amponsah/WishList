@@ -20,15 +20,22 @@ export default function AddItemsPage() {
   const [hasNextPage, setHasNextPage] = useState(false)
   const [totalItems, setTotalItems] = useState(0)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [addingItems, setAddingItems] = useState({})
 
   // Fetch wishlist data
   useEffect(() => {
-    const loadWishlist = () => {
-      const foundWishlist = getWishlistById(id)
-      if (foundWishlist) {
-        setWishlist(foundWishlist)
-      } else {
-        toast.error('Wishlist not found')
+    const loadWishlist = async () => {
+      try {
+        const foundWishlist = await getWishlistById(id)
+        if (foundWishlist) {
+          setWishlist(foundWishlist)
+        } else {
+          toast.error('Wishlist not found')
+          navigate('/my-wishlists')
+        }
+      } catch (error) {
+        console.error('Error loading wishlist:', error)
+        toast.error('Failed to load wishlist')
         navigate('/my-wishlists')
       }
     }
@@ -122,39 +129,59 @@ export default function AddItemsPage() {
   }
 
   const isItemInWishlist = (id) => {
-    return wishlist?.items.some(item => item.id === id) || false
+    return wishlist?.items?.some(item => item.id === id) ?? false;
   }
 
   const handleAddItem = async (product) => {
-    const success = addItemToWishlist(id, product)
-    if (success) {
-      const updatedWishlist = getWishlistById(id)
-      setWishlist(updatedWishlist)
-      const toastId = toast.success('Item added to wishlist!', { icon: '🎉' })
+    setAddingItems(prev => ({ ...prev, [product.id]: true }))
+    try {
+      const success = await addItemToWishlist(id, product)
+      if (success) {
+        const updatedWishlist = await getWishlistById(id)
+        setWishlist(updatedWishlist)
+        const toastId = toast.success('Item added to wishlist!', { icon: '🎉' })
 
-      // Dismiss the toast after 2 seconds
-      setTimeout(() => {
-        toast.dismiss(toastId)
-      }, 2000)
-    } else {
-      toast.error('This item is already in your wishlist!', { icon: '⚠️' })
+        // Dismiss the toast after 2 seconds
+        setTimeout(() => {
+          toast.dismiss(toastId)
+        }, 2000)
+      } else {
+        toast.error('This item is already in your wishlist!', { icon: '⚠️' })
+      }
+    } catch (error) {
+      console.error('Error adding item:', error)
+      toast.error(error.message || 'Failed to add item to wishlist')
+    } finally {
+      setAddingItems(prev => ({ ...prev, [product.id]: false }))
     }
   }
 
-  const handleRemoveItem = (itemId) => {
-    const success = removeItemFromWishlist(id, itemId)
-    if (success) {
-      setWishlist(getWishlistById(id))
-      toast.success('Item removed from wishlist')
-    } else {
-      toast.error('Failed to remove item')
+  const handleRemoveItem = async (itemId) => {
+    try {
+      const success = await removeItemFromWishlist(id, itemId)
+      if (success) {
+        const updatedWishlist = await getWishlistById(id)
+        setWishlist(updatedWishlist)
+        toast.success('Item removed from wishlist')
+      } else {
+        toast.error('Failed to remove item')
+      }
+    } catch (error) {
+      console.error('Error removing item:', error)
+      toast.error(error.message || 'Failed to remove item from wishlist')
     }
   }
 
-  const handleQuantityChange = (itemId, change) => {
-    const success = updateItemQuantity(id, itemId, Math.max(1, (wishlist?.items.find(item => item.id === itemId)?.quantity || 1) + change))
-    if (success) {
-      setWishlist(getWishlistById(id))
+  const handleQuantityChange = async (itemId, change) => {
+    try {
+      const success = await updateItemQuantity(id, itemId, Math.max(1, (wishlist?.items.find(item => item.id === itemId)?.quantity || 1) + change))
+      if (success) {
+        const updatedWishlist = await getWishlistById(id)
+        setWishlist(updatedWishlist)
+      }
+    } catch (error) {
+      console.error('Error updating quantity:', error)
+      toast.error(error.message || 'Failed to update item quantity')
     }
   }
 
@@ -175,7 +202,7 @@ export default function AddItemsPage() {
             className="relative p-2 text-gray-600"
           >
             <FiShoppingBag className="w-6 h-6" />
-            {wishlist?.items.length > 0 && (
+            {wishlist?.items?.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                 {wishlist.items.length}
               </span>
@@ -261,16 +288,23 @@ export default function AddItemsPage() {
                     </div>
                     <button
                       onClick={() => handleAddItem(product)}
-                      disabled={isItemInWishlist(product.id)}
+                      disabled={isItemInWishlist(product.id) || addingItems[product.id]}
                       className={`w-full py-2 rounded transition-colors flex items-center justify-center gap-2
                         ${isItemInWishlist(product.id)
                           ? 'bg-green-500 text-white cursor-not-allowed'
-                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                          : addingItems[product.id]
+                            ? 'bg-blue-400 text-white cursor-not-allowed'
+                            : 'bg-blue-500 text-white hover:bg-blue-600'
                         }`}
                     >
                       {isItemInWishlist(product.id) ? (
                         <>
                           <FiCheck /> Added to Wishlist
+                        </>
+                      ) : addingItems[product.id] ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Adding...</span>
                         </>
                       ) : (
                         <>
@@ -320,14 +354,14 @@ export default function AddItemsPage() {
         <div className="sticky top-0 bg-gray-50 pb-4 mb-4">
           <h2 className="text-xl font-semibold mb-2">Added Items</h2>
           <p className="text-sm text-gray-600">
-            {wishlist?.items.length || 0} items • Total: ₵
-            {wishlist?.totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            {wishlist?.items?.length || 0} items • Total: ₵
+            {(wishlist?.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </p>
         </div>
 
         <div className="space-y-3 md:space-y-4">
           <AnimatePresence>
-            {wishlist?.items.map((item) => (
+            {wishlist?.items?.map((item) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, x: 20 }}
@@ -368,7 +402,7 @@ export default function AddItemsPage() {
             ))}
           </AnimatePresence>
 
-          {(!wishlist?.items || wishlist.items.length === 0) && (
+          {(!wishlist?.items || wishlist?.items?.length === 0) && (
             <div className="text-center text-gray-500 py-8">
               <FiShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No items added yet</p>

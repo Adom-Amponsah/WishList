@@ -1,7 +1,20 @@
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { getUsername } from '../services/wishlistService';
+import { FiUser, FiUserPlus } from 'react-icons/fi';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const username = getUsername(); // Get username once when component mounts
+  
+  const handleGetStarted = () => {
+    if (username) {
+      navigate('/events');
+    } else {
+      navigate('/setup');
+    }
+  };
+
   // Images for each column (using Unsplash placeholders)
   const columns = [
     [
@@ -58,6 +71,27 @@ const HeroSection = () => {
       {/* Overlay with content */}
       <div className="fixed inset-0 z-10 bg-gradient-to-b from-black/70 via-black/50 to-black/70 
         flex flex-col items-center justify-center text-white px-4">
+        
+        {/* Username status indicator */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="absolute top-4 right-4 flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full"
+        >
+          {username ? (
+            <>
+              <FiUser className="text-green-400" />
+              <span className="text-sm text-green-400">@{username}</span>
+            </>
+          ) : (
+            <>
+              <FiUserPlus className="text-yellow-400" />
+              <span className="text-sm text-yellow-400">No Username Set</span>
+            </>
+          )}
+        </motion.div>
+
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -85,16 +119,27 @@ const HeroSection = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <Link
-            to="/events"
-            className="bg-white/10  border-2 border-white/20 text-white 
+          <button
+            onClick={handleGetStarted}
+            className="bg-white/10 border-2 border-white/20 text-white 
               px-8 sm:px-10 py-4 sm:py-5 rounded-full text-lg sm:text-xl font-semibold
               hover:bg-white hover:text-black transition-all duration-300
               hover:border-transparent hover:scale-105 transform
-              active:scale-95 shadow-lg shadow-black/20"
+              active:scale-95 shadow-lg shadow-black/20
+              flex items-center gap-2"
           >
-            Get Started
-          </Link>
+            {username ? (
+              <>
+                <FiUser className="w-5 h-5" />
+                Continue as @{username}
+              </>
+            ) : (
+              <>
+                <FiUserPlus className="w-5 h-5" />
+                Set Up Your Username
+              </>
+            )}
+          </button>
         </motion.div>
       </div>
     </div>

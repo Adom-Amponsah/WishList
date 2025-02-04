@@ -3,17 +3,35 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiCalendar, FiGift, FiPlus, FiEye, FiTrash2, FiX, FiShoppingBag } from 'react-icons/fi'
 import { FaBirthdayCake, FaRing, FaBaby, FaHome, FaGraduationCap, FaTree, FaHeart } from 'react-icons/fa'
-import { getAllWishlistsForUser, deleteWishlist } from '../services/wishlistService'
+import { getAllWishlistsForUser, deleteWishlist, getUsername } from '../services/wishlistService'
 import toast from 'react-hot-toast'
 
 export default function MyWishlists() {
   const [wishlists, setWishlists] = useState([])
   const [deleteModal, setDeleteModal] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const lists = getAllWishlistsForUser()
-    setWishlists(lists)
+    loadWishlists()
   }, [])
+
+  const loadWishlists = async () => {
+    try {
+      setIsLoading(true)
+      const username = getUsername()
+      if (!username) {
+        toast.error('Please set up your username first')
+        return
+      }
+      const lists = await getAllWishlistsForUser(username)
+      setWishlists(lists)
+    } catch (error) {
+      console.error('Error loading wishlists:', error)
+      toast.error('Failed to load wishlists')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const getEventIcon = (eventType) => {
     switch(eventType.toLowerCase()) {
@@ -36,14 +54,18 @@ export default function MyWishlists() {
     }
   }
 
-  const handleDelete = (id) => {
-    const success = deleteWishlist(id)
-    if (success) {
-      const updatedWishlists = getAllWishlistsForUser()
-      setWishlists(updatedWishlists)
-      toast.success('Wishlist deleted successfully')
-      setDeleteModal(null)
-    } else {
+  const handleDelete = async (id) => {
+    try {
+      const success = await deleteWishlist(id)
+      if (success) {
+        await loadWishlists() // Reload wishlists after deletion
+        toast.success('Wishlist deleted successfully')
+        setDeleteModal(null)
+      } else {
+        toast.error('Failed to delete wishlist')
+      }
+    } catch (error) {
+      console.error('Error deleting wishlist:', error)
       toast.error('Failed to delete wishlist')
     }
   }
@@ -131,8 +153,16 @@ export default function MyWishlists() {
           </Link>
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading your wishlists...</p>
+          </div>
+        )}
+
         {/* Empty State */}
-        {wishlists.length === 0 && (
+        {!isLoading && wishlists.length === 0 && (
           <div className="text-center py-12 bg-white rounded-xl shadow-sm">
             <FiGift className="w-16 h-16 mx-auto text-gray-400 mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-4">No wishlists yet</h3>
@@ -148,71 +178,73 @@ export default function MyWishlists() {
         )}
 
         {/* Wishlists Grid - Adjusted for mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {wishlists.map((wishlist) => (
-            <motion.div
-              key={wishlist.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="group relative"
-            >
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="p-4 md:p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 md:p-3 bg-gray-50 rounded-xl">
-                      {getEventIcon(wishlist.eventType)}
-                    </div>
-                    <div>
-                      <h2 className="text-lg md:text-2xl font-bold text-gray-900 line-clamp-1">{wishlist.name}</h2>
-                      <p className="text-sm text-gray-500">{wishlist.eventType}</p>
-                    </div>
-                    {/* Delete Button - Always Visible */}
-                    <button
-                      onClick={() => setDeleteModal(wishlist)}
-                      className="ml-auto p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                    >
-                      <FiTrash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between text-gray-500 text-xs md:text-sm mt-4">
-                    <div className="flex items-center gap-1.5 md:gap-2">
-                      <FiCalendar className="opacity-75" />
-                      <span>{new Date(wishlist.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FiShoppingBag className="w-4 h-4" />
-                      <span>{wishlist.items?.length || 0} items</span>
-                      <span>•</span>
-                      <span>₵{(wishlist.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 md:pt-4 border-t border-gray-100">
-                    <div className="flex items-center justify-between mb-3 md:mb-4">
-                      <span className="text-sm text-gray-500">Total Value</span>
-                      <span className="text-lg md:text-2xl font-bold text-blue-600">
-                        ₵{(wishlist.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-
-                    <div className="flex gap-2 md:gap-3">
-                      <Link
-                        to={`/wishlist/${wishlist.id}`}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5
-                                 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors
-                                 border border-gray-200 text-sm md:text-base"
+        {!isLoading && wishlists.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {wishlists.map((wishlist) => (
+              <motion.div
+                key={wishlist.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="group relative"
+              >
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                  <div className="p-4 md:p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 md:p-3 bg-gray-50 rounded-xl">
+                        {getEventIcon(wishlist.eventType)}
+                      </div>
+                      <div>
+                        <h2 className="text-lg md:text-2xl font-bold text-gray-900 line-clamp-1">{wishlist.name}</h2>
+                        <p className="text-sm text-gray-500">{wishlist.eventType}</p>
+                      </div>
+                      {/* Delete Button - Always Visible */}
+                      <button
+                        onClick={() => setDeleteModal(wishlist)}
+                        className="ml-auto p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                       >
-                        <FiEye className="w-4 h-4" />
-                        View Details
-                      </Link>
+                        <FiTrash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between text-gray-500 text-xs md:text-sm mt-4">
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                        <FiCalendar className="opacity-75" />
+                        <span>{new Date(wishlist.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <FiShoppingBag className="w-4 h-4" />
+                        <span>{wishlist.items?.length || 0} items</span>
+                        <span>•</span>
+                        <span>₵{(wishlist.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 md:pt-4 border-t border-gray-100">
+                      <div className="flex items-center justify-between mb-3 md:mb-4">
+                        <span className="text-sm text-gray-500">Total Value</span>
+                        <span className="text-lg md:text-2xl font-bold text-blue-600">
+                          ₵{(wishlist.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 md:gap-3">
+                        <Link
+                          to={`/wishlist/${wishlist.id}`}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5
+                                   bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors
+                                   border border-gray-200 text-sm md:text-base"
+                        >
+                          <FiEye className="w-4 h-4" />
+                          View Details
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Delete Modal - Adjusted for mobile */}

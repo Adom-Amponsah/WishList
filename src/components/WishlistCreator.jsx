@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useTransform } from 'framer-motion'
 import AddItemModal from './AddItemModal'
-import { createWishlist } from '../services/wishlistService'
+import { createWishlist, getUsername } from '../services/wishlistService'
 import toast from 'react-hot-toast'
 import { FiPlus, FiChevronLeft } from 'react-icons/fi'
 
@@ -65,7 +65,7 @@ const WishlistCreator = () => {
     event => event.name.toLowerCase().replace(/\s+/g, '-') === eventType
   )
 
-  const handleCreateWishlist = (e) => {
+  const handleCreateWishlist = async (e) => {
     e.preventDefault()
     if (!name.trim()) {
       toast.error('Please enter a wishlist name')
@@ -74,14 +74,19 @@ const WishlistCreator = () => {
 
     setIsSubmitting(true)
     try {
-      const newWishlist = createWishlist(name.trim(), selectedEvent.name)
+      const username = getUsername() // Get the username
+      if (!username) {
+        throw new Error('Please set up your username first')
+      }
+
+      const newWishlist = await createWishlist(name.trim(), selectedEvent.name, username)
       setCreatedWishlistId(newWishlist.id)
       setWishlistName(name.trim())
       toast.success('Wishlist created! Now add some items.')
       navigate(`/wishlist/${newWishlist.id}/add-items`)
     } catch (error) {
       console.error('Error creating wishlist:', error)
-      toast.error('Failed to create wishlist')
+      toast.error(error.message || 'Failed to create wishlist')
     } finally {
       setIsSubmitting(false)
     }

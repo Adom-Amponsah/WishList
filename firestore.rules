@@ -1,0 +1,30 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow public read access to wishlists
+    match /wishlists/{wishlistId} {
+      // Anyone can read wishlists (for sharing functionality)
+      allow read: if true;
+      
+      // Allow create if username is provided
+      allow create: if request.resource.data.keys().hasAll(['name', 'eventType', 'items', 'totalPrice', 'createdAt', 'username'])
+                   && request.resource.data.items is list
+                   && request.resource.data.username is string
+                   && request.resource.data.username.size() > 0;
+      
+      // Allow updates if username matches
+      allow update: if request.resource.data.keys().hasAll(['items', 'totalPrice', 'updatedAt', 'username'])
+                   && request.resource.data.items is list
+                   && resource.data.username == request.resource.data.username;
+      
+      // Allow delete if username matches
+      allow delete: if resource.data.username == request.resource.data.username;
+    }
+    
+    // Deny access to all other collections by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

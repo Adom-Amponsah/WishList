@@ -23,164 +23,126 @@ export default function WishlistDetails() {
   const [isSharing, setIsSharing] = useState(false)
   const [shareSuccess, setShareSuccess] = useState('')
   const [shareError, setShareError] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo({ top: 0, behavior: 'smooth' })
-    
-    const loadWishlist = () => {
-      const foundWishlist = getWishlistById(id)
+    loadWishlist()
+  }, [id])
+
+  const loadWishlist = async () => {
+    try {
+      setIsLoading(true)
+      const foundWishlist = await getWishlistById(id)
       if (foundWishlist) {
         setWishlist(foundWishlist)
       } else {
         toast.error('Wishlist not found')
         navigate('/my-wishlists')
       }
-    }
-    loadWishlist()
-  }, [id, navigate])
-
-  const handleRemoveItem = (itemSku) => {
-    const success = removeItemFromWishlist(id, itemSku)
-    if (success) {
-      // Refresh wishlist data
-      setWishlist(getWishlistById(id))
-      const toastId = toast.success('Item removed from wishlist')
-
-      // Dismiss the toast after 2 seconds
-      setTimeout(() => {
-        toast.dismiss(toastId)
-      }, 2000)
+    } catch (error) {
+      console.error('Error loading wishlist:', error)
+      toast.error('Failed to load wishlist')
+      navigate('/my-wishlists')
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleDeleteWishlist = () => {
-    const success = deleteWishlist(id)
-    if (success) {
-      toast.success('Wishlist deleted successfully')
-      navigate('/my-wishlists')
-    } else {
-      toast.error('Failed to delete wishlist')
+  const handleRemoveItem = async (itemId) => {
+    try {
+      const success = await removeItemFromWishlist(id, itemId)
+      if (success) {
+        // Refresh wishlist data
+        await loadWishlist()
+        const toastId = toast.success('Item removed from wishlist')
+
+        // Dismiss the toast after 2 seconds
+        setTimeout(() => {
+          toast.dismiss(toastId)
+        }, 2000)
+      }
+    } catch (error) {
+      console.error('Error removing item:', error)
+      toast.error('Failed to remove item')
     }
-    setShowDeleteModal(false)
+  }
+
+  const handleDeleteWishlist = async () => {
+    try {
+      const success = await deleteWishlist(id)
+      if (success) {
+        toast.success('Wishlist deleted successfully')
+        navigate('/my-wishlists')
+      } else {
+        toast.error('Failed to delete wishlist')
+      }
+    } catch (error) {
+      console.error('Error deleting wishlist:', error)
+      toast.error('Failed to delete wishlist')
+    } finally {
+      setShowDeleteModal(false)
+    }
   }
 
   const handleUserDataSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault()
+    setIsSubmitting(true)
 
     try {
-      const shareableLink = updateWishlistUser(id, userData);
+      const shareableLink = await updateWishlistUser(id, userData)
       if (!shareableLink) {
-        throw new Error('Failed to generate share link');
+        throw new Error('Failed to generate share link')
       }
 
-      setShareableLink(shareableLink);
-      toast.success('Wishlist shared successfully!');
+      setShareableLink(shareableLink)
+      toast.success('Wishlist shared successfully!')
     } catch (error) {
-      console.error('Share error:', error);
-      toast.error('Failed to share wishlist');
+      console.error('Share error:', error)
+      toast.error('Failed to share wishlist')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleShare = async () => {
     try {
       setIsSharing(true);
-      
-      // Create standalone HTML page
-      const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${wishlist.name} - Wishlist</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 0; background: #f9fafb; }
-            .header { background: linear-gradient(to right, #2563eb, #7c3aed); color: white; padding: 20px; }
-            .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-            .user-info { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-            .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-            .item-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-            .item-image { aspect-ratio: 1; background: #f3f4f6; }
-            .item-image img { width: 100%; height: 100%; object-fit: contain; }
-            .item-details { padding: 15px; }
-            .price { color: #2563eb; font-weight: bold; font-size: 1.1em; }
-            .contact { color: #2563eb; text-decoration: none; }
-            .contact:hover { text-decoration: underline; }
-            .total { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="container">
-              <h1>${wishlist.name}</h1>
-              <p>${wishlist.eventType} • Created ${new Date().toLocaleDateString()}</p>
-            </div>
-          </div>
-
-          <div class="container">
-            <div class="user-info">
-              <h2>Wishlist Owner</h2>
-              <p>${userData.name}</p>
-              ${userData.email ? `<p><a href="mailto:${userData.email}" class="contact">${userData.email}</a></p>` : ''}
-              ${userData.phone ? `<p><a href="tel:${userData.phone}" class="contact">${userData.phone}</a></p>` : ''}
-            </div>
-
-            <div class="items-grid">
-              ${wishlist.items.map(item => `
-                <div class="item-card">
-                  ${item.image_url ? `
-                    <div class="item-image">
-                      <img src="${item.image_url}" alt="${item.title}">
-                    </div>
-                  ` : ''}
-                  <div class="item-details">
-                    <h3>${item.title}</h3>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="price">₵${(item.price * (item.quantity || 1)).toLocaleString()}</span>
-                      ${item.quantity > 1 ? `<span>Quantity: ${item.quantity}</span>` : ''}
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-
-            <div class="total">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 1.2em;">Total</span>
-                <span style="font-size: 1.5em; color: #2563eb; font-weight: bold;">
-                  ₵${wishlist.totalPrice.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-      
-      // Create data URL
-      const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
-      
-      // Copy to clipboard
-      await navigator.clipboard.writeText(dataUrl);
+      await navigator.clipboard.writeText(shareableLink);
       setShareSuccess('Link copied to clipboard!');
       toast.success('Link copied to clipboard!');
     } catch (error) {
-      setShareError('Failed to generate share link');
+      setShareError('Failed to copy link');
       console.error('Share error:', error);
-      toast.error('Failed to generate share link');
+      toast.error('Failed to copy link');
     } finally {
       setIsSharing(false);
     }
   };
 
-  if (!wishlist) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    )
+  }
+
+  if (!wishlist) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Wishlist Not Found</h2>
+          <p className="text-gray-600 mb-8">The wishlist you're looking for doesn't exist or has been deleted.</p>
+          <Link
+            to="/my-wishlists"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3
+                     bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
+          >
+            Return to My Wishlists
+          </Link>
+        </div>
       </div>
     )
   }
@@ -497,7 +459,7 @@ export default function WishlistDetails() {
                   </div>
                   
                   <p className="text-gray-600 mb-6">
-                    Please provide your details to create a shareable wishlist link.
+                    Please provide your contact details for potential buyers.
                   </p>
 
                   <form onSubmit={handleUserDataSubmit} className="space-y-4">
@@ -586,7 +548,10 @@ export default function WishlistDetails() {
                   </div>
 
                   <button
-                    onClick={() => setShowShareModal(false)}
+                    onClick={() => {
+                      setShowShareModal(false);
+                      setShareableLink('');
+                    }}
                     className="w-full px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     Close
