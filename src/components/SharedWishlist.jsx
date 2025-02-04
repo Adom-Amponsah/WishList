@@ -117,14 +117,14 @@ export default function SharedWishlist() {
         </div>
 
         {/* Back to Homepage */}
-        <div className="mt-8 text-center">
+        {/* <div className="mt-8 text-center">
           <Link 
             to="/" 
             className="inline-flex items-center text-blue-600 hover:text-blue-700"
           >
             <FiHome className="mr-2" /> Back to Homepage
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
   );

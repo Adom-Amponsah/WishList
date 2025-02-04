@@ -12,7 +12,8 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
-  orderBy
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import { encodeWishlistToURL } from '../utils/wishlistUrlUtils';
 
@@ -58,9 +59,9 @@ export const getUsername = () => {
   return localStorage.getItem('wishlist_username');
 };
 
-// Save username to localStorage
+// Save username to localStorage (convert to lowercase)
 export const setUsername = (username) => {
-  localStorage.setItem('wishlist_username', username);
+  localStorage.setItem('wishlist_username', username.toLowerCase());
 };
 
 export const createWishlist = async (name, eventType, username) => {
@@ -75,7 +76,7 @@ export const createWishlist = async (name, eventType, username) => {
       createdAt: serverTimestamp(),
       items: [],
       totalPrice: 0,
-      username
+      username: username.toLowerCase() // Store username in lowercase
     };
     
     const docRef = await addDoc(collection(db, WISHLISTS_COLLECTION), wishlistData);
@@ -349,5 +350,17 @@ export const getSharedWishlist = async (shareId) => {
   } catch (error) {
     console.error('Error getting shared wishlist:', error);
     throw error;
+  }
+};
+
+export const checkUsernameExists = async (username) => {
+  try {
+    const wishlistsRef = collection(db, WISHLISTS_COLLECTION);
+    const q = query(wishlistsRef, where('username', '==', username.toLowerCase()), limit(1));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error('Error checking username:', error);
+    return false;
   }
 }; 
