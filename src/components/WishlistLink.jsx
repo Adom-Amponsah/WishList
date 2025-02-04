@@ -1,111 +1,121 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import { FiGift } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { FiCalendar, FiGift, FiHome } from 'react-icons/fi';
+import { getSharedWishlist } from '../services/wishlistService';
 
 export default function WishlistLink() {
+  const { encodedData } = useParams();
   const [wishlist, setWishlist] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { linkId } = useParams();
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchWishlist = async () => {
+    const loadWishlist = async () => {
       try {
-        const docRef = doc(db, 'shared_wishlists', linkId);
-        const docSnap = await getDoc(docRef);
-
-        if (!docSnap.exists()) {
-          throw new Error('Wishlist not found');
+        const wishlistData = await getSharedWishlist(encodedData);
+        if (wishlistData) {
+          setWishlist(wishlistData);
+        } else {
+          setError('Wishlist not found');
         }
-
-        setWishlist({ id: docSnap.id, ...docSnap.data() });
-      } catch (err) {
-        console.error('Error fetching wishlist:', err);
-        setError(err.message);
+      } catch (error) {
+        console.error('Error loading wishlist:', error);
+        setError('Failed to load wishlist. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchWishlist();
-  }, [linkId]);
+    loadWishlist();
+  }, [encodedData]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading wishlist...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-        <div className="bg-white p-8 rounded-lg shadow-md text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
-          >
-            Go to Homepage
-          </button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Oops!</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Link to="/" className="text-blue-500 hover:text-blue-600 flex items-center justify-center gap-2">
+            <FiHome className="w-5 h-5" />
+            Return to Home
+          </Link>
         </div>
       </div>
     );
   }
 
+  if (!wishlist) return null;
+
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h1 className="text-3xl font-bold mb-2">{wishlist.name}</h1>
-          <p className="text-gray-600 mb-4">{wishlist.eventType}</p>
-          
-          {wishlist.userData && (
-            <div className="border-t pt-4 mt-4">
-              <h2 className="text-xl font-semibold mb-2">Wishlist Owner</h2>
-              <p className="text-gray-700">{wishlist.userData.name}</p>
-              {wishlist.userData.email && (
-                <p><a href={`mailto:${wishlist.userData.email}`} className="text-blue-600 hover:underline">{wishlist.userData.email}</a></p>
-              )}
-              {wishlist.userData.phone && (
-                <p><a href={`tel:${wishlist.userData.phone}`} className="text-blue-600 hover:underline">{wishlist.userData.phone}</a></p>
-              )}
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{wishlist.name}</h1>
+          <div className="flex items-center gap-4 text-gray-600 mb-4">
+            <div className="flex items-center gap-1">
+              <FiCalendar className="w-4 h-4" />
+              <span>{new Date(wishlist.createdAt).toLocaleDateString()}</span>
             </div>
-          )}
+            {wishlist.eventType && (
+              <div className="flex items-center gap-1">
+                <FiGift className="w-4 h-4" />
+                <span>{wishlist.eventType}</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="border-t pt-4">
+            <h2 className="font-semibold text-gray-900 mb-4">Created by {wishlist.userData.name}</h2>
+            {wishlist.userData.email && (
+              <p className="text-gray-600 mb-2">Email: {wishlist.userData.email}</p>
+            )}
+            {wishlist.userData.phone && (
+              <p className="text-gray-600">Phone: {wishlist.userData.phone}</p>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-4">
           {wishlist.items.map((item, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div key={index} className="bg-white rounded-xl shadow-sm p-4 flex gap-4">
               {item.image_url && (
-                <div className="aspect-w-1 aspect-h-1">
-                  <img src={item.image_url} alt={item.title} className="w-full h-full object-contain" />
-                </div>
+                <img 
+                  src={item.image_url} 
+                  alt={item.title}
+                  className="w-24 h-24 object-cover rounded-lg"
+                />
               )}
-              <div className="p-4">
-                <h3 className="font-semibold mb-2">{item.title}</h3>
-                <div className="flex justify-between items-center">
-                  <span className="text-blue-600 font-bold">₵{(item.price * item.quantity).toLocaleString()}</span>
-                  {item.quantity > 1 && <span className="text-gray-500">Quantity: {item.quantity}</span>}
-                </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                <p className="text-gray-600">Quantity: {item.quantity}</p>
+                <p className="text-blue-600 font-semibold">${item.price}</p>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-6 bg-white rounded-lg shadow-md p-6">
+        <div className="mt-6 bg-white rounded-xl shadow-sm p-6">
           <div className="flex justify-between items-center">
-            <span className="text-xl font-semibold">Total</span>
-            <span className="text-2xl font-bold text-blue-600">₵{wishlist.totalPrice.toLocaleString()}</span>
+            <span className="text-gray-600">Total Items: {wishlist.items.length}</span>
+            <span className="text-xl font-bold text-gray-900">
+              Total: ${wishlist.totalPrice}
+            </span>
           </div>
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link to="/" className="text-blue-500 hover:text-blue-600 flex items-center justify-center gap-2">
+            <FiHome className="w-5 h-5" />
+            Return to Home
+          </Link>
         </div>
       </div>
     </div>

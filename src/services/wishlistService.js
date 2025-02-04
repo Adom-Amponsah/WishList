@@ -11,6 +11,8 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { encodeWishlistToURL } from '../utils/wishlistUrlUtils';
+import { compress } from 'lz-string';
+import { Base64 } from 'js-base64';
 
 const WISHLISTS_STORAGE_KEY = 'wishlists'
 const SHARED_WISHLISTS_KEY = 'shared_wishlists'
@@ -280,10 +282,31 @@ export const createSharedWishlist = async (wishlist, userData) => {
     // Save to Firebase
     const docRef = await addDoc(collection(db, 'shared_wishlists'), sharedData);
     
-    // Generate short link using the document ID
-    const shareableLink = `${window.location.origin}/w/${docRef.id}`;
+    // Use the full document ID
+    const fullDocId = docRef.id;
+
+    // Create URLs
+    const longUrl = `${window.location.origin}/w/${fullDocId}`;
     
-    return shareableLink;
+    try {
+      // Try to create short URL
+      const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+      if (!response.ok) throw new Error('URL shortening failed');
+      const shortUrl = await response.text();
+      return {
+        shortUrl,
+        longUrl,
+        firebaseId: docRef.id
+      };
+    } catch (error) {
+      // If URL shortening fails, return the long URL
+      console.warn('URL shortening failed, using long URL:', error);
+      return {
+        shortUrl: longUrl,
+        longUrl,
+        firebaseId: docRef.id
+      };
+    }
   } catch (error) {
     console.error('Error creating shared wishlist:', error);
     throw error;

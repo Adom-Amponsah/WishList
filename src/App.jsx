@@ -40,7 +40,7 @@ export default function App() {
         <Route path="/my-wishlists" element={<MyWishlists />} />
         <Route path="/wishlist/:id" element={<WishlistDetails />} />
         <Route path="/wishlist/:id/add-items" element={<AddItemsPage />} />
-        <Route path="/w/:linkId" element={<WishlistLink />} />
+        <Route path="/w/:encodedData" element={<WishlistLink />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

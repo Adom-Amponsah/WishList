@@ -74,13 +74,13 @@ export default function WishlistDetails() {
     setIsSubmitting(true);
 
     try {
-      // Save wishlist data to Firebase and get shareable link
-      const shareableLink = await createSharedWishlist(wishlist, userData);
-      setShareableLink(shareableLink);
+      // Save wishlist data and get both short and long URLs
+      const { shortUrl, longUrl } = await createSharedWishlist(wishlist, userData);
+      setShareableLink(shortUrl); // Use the shortened URL for sharing
 
       // Copy to clipboard
-      await navigator.clipboard.writeText(shareableLink);
-      toast.success('Link copied to clipboard!');
+      await navigator.clipboard.writeText(shortUrl);
+      toast.success('Short link copied to clipboard!');
     } catch (error) {
       console.error('Share error:', error);
       toast.error('Failed to share wishlist');
