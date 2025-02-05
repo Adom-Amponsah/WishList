@@ -208,7 +208,7 @@ const WishlistCreator = () => {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter wishlist name"
                     className="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-xl
-                             text-white placeholder-white/50 focus:ring-2 focus:ring-white/50
+                             text-white placeholder-gray-400 focus:ring-2 focus:ring-white/50
                              focus:border-transparent backdrop-blur-sm"
                     required
                   />

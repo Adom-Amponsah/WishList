@@ -303,6 +303,12 @@ export const updateWishlistUser = async (wishlistId, userData) => {
       return null;
     }
 
+    // Validate required fields
+    if (!userData.name || !userData.email || !userData.phone || !userData.dateOfBirth || !userData.location) {
+      console.error('Missing required user data fields');
+      return null;
+    }
+
     const docRef = doc(db, WISHLISTS_COLLECTION, wishlistId);
     const wishlist = await getWishlistById(wishlistId);
     
@@ -320,7 +326,11 @@ export const updateWishlistUser = async (wishlistId, userData) => {
     // Add user data to wishlist
     await updateDoc(docRef, {
       userData: {
-        ...userData,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        dateOfBirth: userData.dateOfBirth,
+        location: userData.location,
         updatedAt: serverTimestamp()
       }
     });
@@ -366,5 +376,91 @@ export const checkUsernameExists = async (username) => {
   } catch (error) {
     console.error('Error checking username:', error);
     return false;
+  }
+};
+
+// Add new function to handle contributions
+export const addContribution = async (wishlistId, itemId, contribution) => {
+  try {
+    const docRef = doc(db, WISHLISTS_COLLECTION, wishlistId);
+    const wishlist = await getWishlistById(wishlistId);
+    
+    if (!wishlist) return false;
+
+    // Find the item and update its contributions
+    const updatedItems = wishlist.items.map(item => {
+      if (item.id === itemId) {
+        // Ensure contributions array exists
+        const currentContributions = Array.isArray(item.contributions) ? item.contributions : [];
+        
+        // Format the new contribution
+        const newContribution = {
+          id: generateId(),
+          amount: Number(contribution.amount) || 0,
+          reference: String(contribution.reference || ''),
+          isFullGift: Boolean(contribution.isFullGift),
+          contributorEmail: String(contribution.contributorEmail || ''),
+          contributorName: String(contribution.contributorName || ''),
+          status: String(contribution.status || 'success'),
+          transactionId: String(contribution.transactionId || ''),
+          createdAt: new Date().toISOString(),
+          paidAt: contribution.paidAt || new Date().toISOString(),
+          paymentMethod: String(contribution.paymentMethod || 'paystack'),
+          metadata: contribution.metadata || {}
+        };
+
+        // Calculate totals
+        const currentTotal = currentContributions.reduce((sum, contrib) => sum + (Number(contrib.amount) || 0), 0);
+        const newTotal = currentTotal + newContribution.amount;
+        const itemTotal = Number(item.price) * (Number(item.quantity) || 1);
+        
+        // Check if this contribution completes the payment
+        const isFullyFunded = newTotal >= itemTotal;
+
+        return {
+          ...item,
+          contributions: [...currentContributions, newContribution],
+          fullyFunded: isFullyFunded,
+          fundedAt: isFullyFunded ? new Date().toISOString() : null,
+          totalContributed: newTotal
+        };
+      }
+      return item;
+    });
+
+    // Calculate new total contributions across all items
+    const totalContributions = updatedItems.reduce((sum, item) => {
+      const itemContributions = Array.isArray(item.contributions) 
+        ? item.contributions.reduce((itemSum, contrib) => itemSum + (Number(contrib.amount) || 0), 0)
+        : 0;
+      return sum + itemContributions;
+    }, 0);
+
+    // Update the document with new data
+    await updateDoc(docRef, {
+      items: updatedItems,
+      totalContributions: Number(totalContributions) || 0,
+      updatedAt: serverTimestamp(),
+      lastContributionAt: serverTimestamp()
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error adding contribution:', error);
+    return false;
+  }
+};
+
+// Function to get all contributions for an item
+export const getItemContributions = async (wishlistId, itemId) => {
+  try {
+    const wishlist = await getWishlistById(wishlistId);
+    if (!wishlist) return [];
+
+    const item = wishlist.items.find(item => item.id === itemId);
+    return item?.contributions || [];
+  } catch (error) {
+    console.error('Error getting item contributions:', error);
+    return [];
   }
 }; 

@@ -100,7 +100,11 @@ export default function EventSelection() {
       <nav className="bg-white shadow-sm">
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-semibold text-gray-800">Nokonice</h1>
+            <img 
+              src="/images/LockUp_Black.png" // Update this path to the actual image location
+              alt="Nokonice Logo"
+              className="h-9" // Adjust the height as needed
+            />
             <Link
               to="/my-wishlists"
               className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg 

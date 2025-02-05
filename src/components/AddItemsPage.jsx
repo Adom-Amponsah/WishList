@@ -417,7 +417,7 @@ export default function AddItemsPage() {
             className="w-full py-4 bg-blue-500 text-white rounded-xl font-medium
                      hover:bg-blue-600 transition-colors"
           >
-            Done
+            Share
           </button>
         </div>
       </div>

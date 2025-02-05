@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getWishlistById, removeItemFromWishlist, deleteWishlist, updateWishlistUser } from '../services/wishlistService'
 import { encodeWishlistToURL } from '../utils/wishlistUrlUtils'
@@ -10,6 +10,14 @@ import { Link } from 'react-router-dom'
 export default function WishlistDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+  
+  // Add refs for form inputs
+  const nameRef = useRef(null)
+  const emailRef = useRef(null)
+  const phoneRef = useRef(null)
+  const dobRef = useRef(null)
+  const locationRef = useRef(null)
+  
   const [wishlist, setWishlist] = useState(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
@@ -87,24 +95,38 @@ export default function WishlistDetails() {
   }
 
   const handleUserDataSubmit = async (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      const shareableLink = await updateWishlistUser(id, userData)
-      if (!shareableLink) {
-        throw new Error('Failed to generate share link')
+      const userData = {
+        name: nameRef.current.value,
+        email: emailRef.current.value,
+        phone: phoneRef.current.value,
+        dateOfBirth: dobRef.current.value,
+        location: locationRef.current.value
+      };
+
+      if (!userData.name || !userData.email || !userData.phone || !userData.dateOfBirth || !userData.location) {
+        toast.error('Please fill in all fields');
+        return;
       }
 
-      setShareableLink(shareableLink)
-      toast.success('Wishlist shared successfully!')
+      const shareableUrl = await updateWishlistUser(id, userData);
+      if (shareableUrl) {
+        setShareableLink(shareableUrl);
+        setShowShareModal(true);
+        toast.success('Wishlist updated successfully!');
+      } else {
+        toast.error('Failed to update wishlist');
+      }
     } catch (error) {
-      console.error('Share error:', error)
-      toast.error('Failed to share wishlist')
+      console.error('Error updating wishlist:', error);
+      toast.error(error.message || 'Failed to update wishlist');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleShare = async () => {
     try {
@@ -462,61 +484,92 @@ export default function WishlistDetails() {
                     Please provide your contact details for potential buyers.
                   </p>
 
-                  <form onSubmit={handleUserDataSubmit} className="space-y-4">
+                  <form onSubmit={handleUserDataSubmit} className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Your Name
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name
                       </label>
                       <input
+                        id="name"
+                        ref={nameRef}
                         type="text"
                         required
-                        value={userData.name}
-                        onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your name"
+                        placeholder="Enter your full name"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                         Email Address
                       </label>
                       <input
+                        id="email"
+                        ref={emailRef}
                         type="email"
                         required
-                        value={userData.email}
-                        onChange={(e) => setUserData(prev => ({ ...prev, email: e.target.value }))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your email"
+                        placeholder="Enter your email address"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                         Phone Number
                       </label>
                       <input
+                        id="phone"
+                        ref={phoneRef}
                         type="tel"
                         required
-                        value={userData.phone}
-                        onChange={(e) => setUserData(prev => ({ ...prev, phone: e.target.value }))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Enter your phone number"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-1">
+                        Date of Birth
+                      </label>
+                      <input
+                        id="dob"
+                        ref={dobRef}
+                        type="date"
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                        Location
+                      </label>
+                      <input
+                        id="location"
+                        ref={locationRef}
+                        type="text"
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter your location"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 
-                               transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl font-medium
+                               hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+                               flex items-center justify-center gap-2"
                     >
                       {isSubmitting ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Updating...
+                        </>
                       ) : (
                         <>
                           <FiShare2 className="w-5 h-5" />
-                          Create Shareable Link
+                          Share Wishlist
                         </>
                       )}
                     </button>

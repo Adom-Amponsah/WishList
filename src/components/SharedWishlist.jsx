@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getSharedWishlist } from '../services/wishlistService';
-import { FiMail, FiPhone, FiHome, FiCreditCard, FiGift, FiHeart } from 'react-icons/fi';
+import { getSharedWishlist, addContribution } from '../services/wishlistService';
+import { FiMail, FiPhone, FiHome, FiCreditCard, FiGift, FiHeart, FiDollarSign, FiUsers, FiCheck } from 'react-icons/fi';
 import { PaystackButton } from 'react-paystack';
 import { toast } from 'react-hot-toast';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SharedWishlist() {
   const { shareId } = useParams();
   const [wishlist, setWishlist] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showContributeModal, setShowContributeModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [contributionAmount, setContributionAmount] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const loadSharedWishlist = async () => {
@@ -30,15 +34,82 @@ export default function SharedWishlist() {
     loadSharedWishlist();
   }, [shareId]);
 
-  const getPaystackProps = (item) => ({
+  // Function to calculate remaining amount for an item
+  const getRemainingAmount = (item) => {
+    const totalContributed = (item.contributions || []).reduce((sum, contrib) => sum + contrib.amount, 0);
+    return (item.price * (item.quantity || 1)) - totalContributed;
+  };
+
+  // Function to get contribution percentage
+  const getContributionPercentage = (item) => {
+    const totalPrice = item.price * (item.quantity || 1);
+    const totalContributed = (item.contributions || []).reduce((sum, contrib) => sum + contrib.amount, 0);
+    return (totalContributed / totalPrice) * 100;
+  };
+
+  const handleContribute = (item) => {
+    setSelectedItem(item);
+    setShowContributeModal(true);
+  };
+
+  const handlePaystackResponse = async (reference, amount, item, isFullGift = false) => {
+    setIsProcessing(true);
+    try {
+      // Ensure we have all required data and it's properly formatted
+      const contributionData = {
+        amount: Number(amount),
+        reference: reference.reference || '',
+        isFullGift: Boolean(isFullGift),
+        contributorEmail: reference.customer?.email || reference.email || '',
+        contributorName: reference.customer?.name || '',
+        status: reference.status || 'success',
+        transactionId: reference.transaction || reference.trans || '',
+        paidAt: new Date().toISOString(),
+        paymentMethod: 'paystack',
+        metadata: {
+          ...reference,
+          raw_response: JSON.stringify(reference)
+        }
+      };
+
+      console.log('Saving contribution:', contributionData); // Debug log
+
+      const success = await addContribution(shareId, item.id, contributionData);
+      if (success) {
+        // Refresh wishlist data to update UI
+        const updatedWishlist = await getSharedWishlist(shareId);
+        if (updatedWishlist) {
+          setWishlist(updatedWishlist);
+          toast.success(
+            isFullGift 
+              ? `Successfully gifted ${item.title}!` 
+              : `Successfully contributed ₵${amount} towards ${item.title}!`
+          );
+        } else {
+          throw new Error('Failed to refresh wishlist data');
+        }
+      } else {
+        throw new Error('Failed to record contribution');
+      }
+    } catch (error) {
+      console.error('Payment processing error:', error);
+      toast.error('Failed to process payment. Please contact support.');
+    } finally {
+      setIsProcessing(false);
+      setShowContributeModal(false);
+    }
+  };
+
+  const getPaystackProps = (amount, item, isFullGift = false) => ({
     email: wishlist?.userData?.email || 'customer@example.com',
-    amount: Math.round(item.price * (item.quantity || 1) * 100),
+    amount: Math.round(amount * 100), // Convert to pesewas
     publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-    text: 'Pay for Item',
+    text: isProcessing ? 'Processing...' : (isFullGift ? 'Gift Entire Item' : 'Contribute'),
     currency: 'GHS',
     metadata: {
       wishlistId: shareId,
       itemId: item.id,
+      isFullGift,
       custom_fields: [
         {
           display_name: "Item Name",
@@ -51,18 +122,21 @@ export default function SharedWishlist() {
           value: wishlist?.userData?.name || 'Unknown'
         },
         {
-          display_name: "Quantity",
-          variable_name: "quantity",
-          value: item.quantity || 1
+          display_name: "Contribution Type",
+          variable_name: "contribution_type",
+          value: isFullGift ? 'Full Gift' : 'Partial Contribution'
+        },
+        {
+          display_name: "Amount",
+          variable_name: "amount",
+          value: amount
         }
       ]
     },
-    onSuccess: (reference) => {
-      toast.success(`Payment successful for ${item.quantity || 1}x ${item.title}!`);
-      // Here you can add logic to mark the specific item as purchased
-    },
+    onSuccess: (reference) => handlePaystackResponse(reference, amount, item, isFullGift),
     onClose: () => {
-      // Handle payment modal close
+      setShowContributeModal(false);
+      setIsProcessing(false);
     }
   });
 
@@ -243,7 +317,6 @@ export default function SharedWishlist() {
                     alt={item.title}
                     className="w-full h-full object-contain p-4"
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
                 </div>
               )}
               <div className="p-6">
@@ -251,34 +324,85 @@ export default function SharedWishlist() {
                   {item.title}
                 </h3>
                 
-                <div className="flex items-center justify-between mb-4">
-                  <div>
+                <div className="flex flex-col gap-2 mb-4">
+                  <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold text-blue-600">
                       ₵{(item.price * (item.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                     {item.quantity > 1 && (
-                      <span className="ml-2 text-sm text-gray-500">
+                      <span className="text-sm text-gray-500">
                         (₵{item.price.toLocaleString('en-US', { minimumFractionDigits: 2 })} each × {item.quantity})
                       </span>
                     )}
                   </div>
+
+                  {/* Contribution Progress */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Progress</span>
+                      <span className="font-medium text-blue-600">
+                        {getContributionPercentage(item).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${getContributionPercentage(item)}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="h-full bg-blue-500 rounded-full"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">
+                        Raised: ₵{((item.contributions || []).reduce((sum, contrib) => sum + contrib.amount, 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-gray-600">
+                        Left: ₵{getRemainingAmount(item).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {item.notes && (
-                  <p className="text-gray-600 text-sm mb-4 italic">
-                    "{item.notes}"
-                  </p>
-                )}
+                <div className="space-y-3">
+                  {getRemainingAmount(item) === 0 ? (
+                    <div className="text-center py-3 bg-green-50 text-green-600 rounded-xl font-medium flex items-center justify-center gap-2">
+                      <FiCheck className="w-5 h-5" />
+                      Fully Funded! 🎉
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleContribute(item)}
+                        className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl 
+                                 hover:bg-blue-600 transition-all transform hover:scale-[1.02]
+                                 flex items-center justify-center gap-2 font-medium"
+                      >
+                        <FiDollarSign className="w-5 h-5" />
+                        Contribute
+                      </button>
 
-                <PaystackButton
-                  {...getPaystackProps(item)}
-                  className="w-full px-6 py-3 bg-green-500 text-white rounded-xl 
-                           hover:bg-green-600 transition-all transform hover:scale-[1.02]
-                           flex items-center justify-center gap-2 font-medium"
-                >
-                  <FiHeart className="w-5 h-5" />
-                  Gift This Item
-                </PaystackButton>
+                      <PaystackButton
+                        {...getPaystackProps(getRemainingAmount(item), item, true)}
+                        className="w-full px-6 py-3 bg-green-500 text-white rounded-xl 
+                                 hover:bg-green-600 transition-all transform hover:scale-[1.02]
+                                 flex items-center justify-center gap-2 font-medium
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isProcessing}
+                      >
+                        <FiGift className="w-5 h-5" />
+                        {isProcessing ? 'Processing...' : `Gift Remaining (₵${getRemainingAmount(item).toLocaleString('en-US', { minimumFractionDigits: 2 })})`}
+                      </PaystackButton>
+                    </>
+                  )}
+                </div>
+
+                {/* Contributors count */}
+                {(item.contributions || []).length > 0 && (
+                  <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                    <FiUsers className="w-4 h-4" />
+                    <span>{item.contributions.length} contributor{item.contributions.length !== 1 ? 's' : ''}</span>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
@@ -297,6 +421,99 @@ export default function SharedWishlist() {
           </p>
         </motion.div>
       </div>
+
+      {/* Contribute Modal */}
+      <AnimatePresence>
+        {showContributeModal && selectedItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowContributeModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl p-6 w-full max-w-md"
+            >
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                Contribute to {selectedItem.title}
+              </h3>
+
+              <div className="space-y-4 mb-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-600">Total Price:</span>
+                    <span className="font-medium">₵{(selectedItem.price * (selectedItem.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-600">Amount Raised:</span>
+                    <span className="font-medium text-green-600">
+                      ₵{((selectedItem.contributions || []).reduce((sum, contrib) => sum + contrib.amount, 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount Left:</span>
+                    <span className="font-medium text-blue-600">
+                      ₵{getRemainingAmount(selectedItem).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Your Contribution
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₵</span>
+                    <input
+                      type="number"
+                      value={contributionAmount}
+                      onChange={(e) => {
+                        const amount = Number(e.target.value);
+                        const maxAmount = getRemainingAmount(selectedItem);
+                        if (amount > maxAmount) {
+                          toast.error(`Maximum contribution amount is ₵${maxAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+                          setContributionAmount(maxAmount.toString());
+                        } else {
+                          setContributionAmount(e.target.value);
+                        }
+                      }}
+                      min="1"
+                      max={getRemainingAmount(selectedItem)}
+                      step="0.01"
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter amount"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {contributionAmount && Number(contributionAmount) > 0 && Number(contributionAmount) <= getRemainingAmount(selectedItem) && (
+                  <PaystackButton
+                    {...getPaystackProps(Number(contributionAmount), selectedItem, false)}
+                    className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl 
+                             hover:bg-blue-600 transition-all flex items-center justify-center gap-2
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isProcessing}
+                  />
+                )}
+                <button
+                  onClick={() => setShowContributeModal(false)}
+                  className="w-full px-6 py-3 border border-gray-200 text-gray-600 rounded-xl 
+                           hover:bg-gray-50 transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 } 
