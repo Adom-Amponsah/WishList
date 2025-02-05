@@ -7,9 +7,8 @@ import MyWishlists from './components/MyWishlists'
 import WishlistDetails from './components/WishlistDetails'
 import AddItemsPage from './components/AddItemsPage'
 import SharedWishlist from './components/SharedWishlist'
-import SharedWishlistViewer from './components/SharedWishlistViewer'
 import NotFound from './components/NotFound'
-import UsernameSetup from './components/UsernameSetup'
+import UserAuth from './components/UserAuth'
 import { getUsername } from './services/wishlistService'
 import './App.css'
 
@@ -18,7 +17,7 @@ const ProtectedRoute = ({ children }) => {
   const username = getUsername();
   
   if (!username) {
-    return <Navigate to="/setup" replace />;
+    return <Navigate to="/auth" replace />;
   }
   
   return children;
@@ -49,7 +48,12 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={<HeroSection />} />
-        <Route path="/setup" element={<UsernameSetup />} />
+        <Route path="/auth" element={<UserAuth />} />
+        <Route path="/my-wishlists" element={
+          <ProtectedRoute>
+            <MyWishlists />
+          </ProtectedRoute>
+        } />
         <Route path="/events" element={
           <ProtectedRoute>
             <EventSelection />
@@ -58,11 +62,6 @@ export default function App() {
         <Route path="/create/:eventType" element={
           <ProtectedRoute>
             <WishlistCreator />
-          </ProtectedRoute>
-        } />
-        <Route path="/my-wishlists" element={
-          <ProtectedRoute>
-            <MyWishlists />
           </ProtectedRoute>
         } />
         <Route path="/wishlist/:id" element={

@@ -16,6 +16,7 @@ import {
   limit
 } from 'firebase/firestore';
 import { encodeWishlistToURL } from '../utils/wishlistUrlUtils';
+import { getStoredUser } from './userService';
 
 const WISHLISTS_STORAGE_KEY = 'wishlists'
 const SHARED_WISHLISTS_KEY = 'shared_wishlists'
@@ -54,20 +55,22 @@ const saveWishlists = (wishlists) => {
   return true
 }
 
-// Get username from localStorage or return null
+// Get username from localStorage
 export const getUsername = () => {
-  return localStorage.getItem('wishlist_username');
+  const user = getStoredUser();
+  return user ? user.username : null;
 };
 
-// Save username to localStorage (convert to lowercase)
-export const setUsername = (username) => {
-  localStorage.setItem('wishlist_username', username.toLowerCase());
+// Get user data from localStorage
+export const getUserData = () => {
+  return getStoredUser();
 };
 
-export const createWishlist = async (name, eventType, username) => {
+export const createWishlist = async (name, eventType) => {
   try {
-    if (!username) {
-      throw new Error('Username is required to create a wishlist');
+    const userData = getUserData();
+    if (!userData) {
+      throw new Error('User data is required to create a wishlist');
     }
 
     const wishlistData = {
@@ -76,14 +79,15 @@ export const createWishlist = async (name, eventType, username) => {
       createdAt: serverTimestamp(),
       items: [],
       totalPrice: 0,
-      username: username.toLowerCase() // Store username in lowercase
+      username: userData.username.toLowerCase(),
+      updatedAt: serverTimestamp()
     };
     
     const docRef = await addDoc(collection(db, WISHLISTS_COLLECTION), wishlistData);
     return {
       id: docRef.id,
       ...wishlistData,
-      createdAt: new Date().toISOString() // Convert timestamp for immediate use
+      createdAt: new Date().toISOString()
     };
   } catch (error) {
     console.error('Error creating wishlist:', error);

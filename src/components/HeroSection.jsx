@@ -5,14 +5,10 @@ import { FiUser, FiUserPlus } from 'react-icons/fi';
 
 const HeroSection = () => {
   const navigate = useNavigate();
-  const username = getUsername(); // Get username once when component mounts
+  const username = getUsername();
   
   const handleGetStarted = () => {
-    if (username) {
-      navigate('/events');
-    } else {
-      navigate('/setup');
-    }
+    navigate('/auth');
   };
 
   // Images for each column (using Unsplash placeholders)
@@ -87,7 +83,7 @@ const HeroSection = () => {
           ) : (
             <>
               <FiUserPlus className="text-yellow-400" />
-              <span className="text-sm text-yellow-400">No Username Set</span>
+              <span className="text-sm text-yellow-400">No Account Set</span>
             </>
           )}
         </motion.div>
@@ -131,12 +127,12 @@ const HeroSection = () => {
             {username ? (
               <>
                 <FiUser className="w-5 h-5" />
-                Continue as @{username}
+                Sign In to Continue
               </>
             ) : (
               <>
                 <FiUserPlus className="w-5 h-5" />
-                Set Up Your Username
+                Get Started
               </>
             )}
           </button>

@@ -4,22 +4,33 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Allow public read access to wishlists
     match /wishlists/{wishlistId} {
-      // Anyone can read wishlists (for sharing functionality)
+      // Anyone can read wishlists
       allow read: if true;
       
-      // Allow create if username is provided
-      allow create: if request.resource.data.keys().hasAll(['name', 'eventType', 'items', 'totalPrice', 'createdAt', 'username'])
-                   && request.resource.data.items is list
+      // Anyone can create wishlists with proper structure
+      allow create: if request.resource.data.keys().hasAll(['name', 'eventType', 'items', 'totalPrice', 'createdAt']) 
+                   && request.resource.data.items is list;
+      
+      // Allow updates with proper validation
+      allow update: if request.resource.data.keys().hasAll(['items', 'totalPrice', 'updatedAt']) 
+                   && request.resource.data.items is list;
+      
+      // Anyone can delete wishlists
+      allow delete: if true;
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      // Anyone can read user data (needed for wishlist sharing)
+      allow read: if true;
+      
+      // Anyone can create a new user account
+      allow create: if request.resource.data.keys().hasAll(['username', 'password', 'email', 'name', 'phone'])
                    && request.resource.data.username is string
                    && request.resource.data.username.size() > 0;
       
-      // Allow updates if username matches
-      allow update: if request.resource.data.keys().hasAll(['items', 'totalPrice', 'updatedAt', 'username'])
-                   && request.resource.data.items is list
-                   && resource.data.username == request.resource.data.username;
-      
-      // Allow delete if username matches
-      allow delete: if resource.data.username == request.resource.data.username;
+      // Anyone can update or delete user data (we'll add proper auth later)
+      allow update, delete: if true;
     }
     
     // Deny access to all other collections by default

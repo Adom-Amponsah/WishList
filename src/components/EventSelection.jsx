@@ -1,6 +1,7 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { FiList } from 'react-icons/fi'
 
 // Event types with their images
 const eventTypes = [
@@ -94,136 +95,155 @@ export default function EventSelection() {
   }
 
   return (
-    <div className="py-12 bg-gray-50">
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Event Type</h2>
-          <p className="text-xl text-gray-600">Select the type of event you're creating a wishlist for</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation Bar */}
+      <nav className="bg-white shadow-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl font-semibold text-gray-800">Nokonice</h1>
+            <Link
+              to="/my-wishlists"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg 
+                       hover:bg-blue-600 transition-colors"
+            >
+              <FiList className="w-5 h-5" />
+              My Wishlists
+            </Link>
+          </div>
         </div>
+      </nav>
 
-        {/* Event Cards with Horizontal Scroll on Desktop, Vertical on Mobile */}
-        <ScrollAnimatedSection className="relative">
-          {/* Mobile View */}
-          <div className="md:hidden space-y-6 px-4">
-            {eventTypes.map((event, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer h-[200px] group"
-                onClick={() => handleEventSelect(event.name)}
-              >
-                <img
-                  src={event.image}
-                  alt={event.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <h3 className="text-2xl font-bold text-white mb-2">
-                    {event.name}
-                  </h3>
-                  <span className="text-sm font-medium text-white/80">
-                    {event.properties}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+      <div className="py-12">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Event Type</h2>
+            <p className="text-xl text-gray-600">Select the type of event you're creating a wishlist for</p>
           </div>
 
-          {/* Desktop View - Keep existing horizontal scroll */}
-          <div className="hidden md:block overflow-x-auto scrollbar-hide">
-            <motion.div 
-              className="flex gap-6 pb-8 relative"
-              drag="x"
-              dragConstraints={{ right: 0, left: -1600 }}
-              whileTap={{ cursor: "grabbing" }}
-              style={{ cursor: "grab" }}
-            >
-              {Array.from({ length: Math.ceil(eventTypes.length / 3) }).map((_, groupIndex) => (
+          {/* Event Cards with Horizontal Scroll on Desktop, Vertical on Mobile */}
+          <ScrollAnimatedSection className="relative">
+            {/* Mobile View */}
+            <div className="md:hidden space-y-6 px-4">
+              {eventTypes.map((event, index) => (
                 <motion.div
-                  key={groupIndex}
-                  initial={{ opacity: 0, x: 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  transition={{
-                    duration: 0.5,
-                    delay: groupIndex * 0.2,
-                    ease: "easeOut"
-                  }}
-                  className="flex-shrink-0 flex gap-6"
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="relative rounded-2xl overflow-hidden cursor-pointer h-[200px] group"
+                  onClick={() => handleEventSelect(event.name)}
                 >
-                  <div 
-                    className="relative rounded-2xl overflow-hidden cursor-pointer w-[300px] h-[600px] group"
-                    onClick={() => handleEventSelect(eventTypes[groupIndex * 3]?.name)}
-                  >
-                    <img
-                      src={eventTypes[groupIndex * 3]?.image}
-                      alt={eventTypes[groupIndex * 3]?.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <h3 className="text-2xl font-bold text-white mb-2">
-                        {eventTypes[groupIndex * 3]?.name}
-                      </h3>
-                      <span className="text-sm font-medium text-white/80">
-                        {eventTypes[groupIndex * 3]?.properties}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Stacked cards container */}
-                  <div className="flex flex-col gap-6">
-                    {/* Top card */}
-                    <div 
-                      className="relative rounded-2xl overflow-hidden cursor-pointer w-[300px] h-[290px] group"
-                      onClick={() => handleEventSelect(eventTypes[groupIndex * 3 + 1]?.name)}
-                    >
-                      <img
-                        src={eventTypes[groupIndex * 3 + 1]?.image}
-                        alt={eventTypes[groupIndex * 3 + 1]?.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-6">
-                        <h3 className="text-xl font-bold text-white mb-2">
-                          {eventTypes[groupIndex * 3 + 1]?.name}
-                        </h3>
-                        <span className="text-sm font-medium text-white/80">
-                          {eventTypes[groupIndex * 3 + 1]?.properties}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Bottom card */}
-                    <div 
-                      className="relative rounded-2xl overflow-hidden cursor-pointer w-[300px] h-[290px] group"
-                      onClick={() => handleEventSelect(eventTypes[groupIndex * 3 + 2]?.name)}
-                    >
-                      <img
-                        src={eventTypes[groupIndex * 3 + 2]?.image}
-                        alt={eventTypes[groupIndex * 3 + 2]?.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-6">
-                        <h3 className="text-xl font-bold text-white mb-2">
-                          {eventTypes[groupIndex * 3 + 2]?.name}
-                        </h3>
-                        <span className="text-sm font-medium text-white/80">
-                          {eventTypes[groupIndex * 3 + 2]?.properties}
-                        </span>
-                      </div>
-                    </div>
+                  <img
+                    src={event.image}
+                    alt={event.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <h3 className="text-2xl font-bold text-white mb-2">
+                      {event.name}
+                    </h3>
+                    <span className="text-sm font-medium text-white/80">
+                      {event.properties}
+                    </span>
                   </div>
                 </motion.div>
               ))}
-            </motion.div>
-          </div>
-        </ScrollAnimatedSection>
+            </div>
+
+            {/* Desktop View - Keep existing horizontal scroll */}
+            <div className="hidden md:block overflow-x-auto scrollbar-hide">
+              <motion.div 
+                className="flex gap-6 pb-8 relative"
+                drag="x"
+                dragConstraints={{ right: 0, left: -1600 }}
+                whileTap={{ cursor: "grabbing" }}
+                style={{ cursor: "grab" }}
+              >
+                {Array.from({ length: Math.ceil(eventTypes.length / 3) }).map((_, groupIndex) => (
+                  <motion.div
+                    key={groupIndex}
+                    initial={{ opacity: 0, x: 50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{
+                      duration: 0.5,
+                      delay: groupIndex * 0.2,
+                      ease: "easeOut"
+                    }}
+                    className="flex-shrink-0 flex gap-6"
+                  >
+                    <div 
+                      className="relative rounded-2xl overflow-hidden cursor-pointer w-[300px] h-[600px] group"
+                      onClick={() => handleEventSelect(eventTypes[groupIndex * 3]?.name)}
+                    >
+                      <img
+                        src={eventTypes[groupIndex * 3]?.image}
+                        alt={eventTypes[groupIndex * 3]?.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-6">
+                        <h3 className="text-2xl font-bold text-white mb-2">
+                          {eventTypes[groupIndex * 3]?.name}
+                        </h3>
+                        <span className="text-sm font-medium text-white/80">
+                          {eventTypes[groupIndex * 3]?.properties}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Stacked cards container */}
+                    <div className="flex flex-col gap-6">
+                      {/* Top card */}
+                      <div 
+                        className="relative rounded-2xl overflow-hidden cursor-pointer w-[300px] h-[290px] group"
+                        onClick={() => handleEventSelect(eventTypes[groupIndex * 3 + 1]?.name)}
+                      >
+                        <img
+                          src={eventTypes[groupIndex * 3 + 1]?.image}
+                          alt={eventTypes[groupIndex * 3 + 1]?.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                          <h3 className="text-xl font-bold text-white mb-2">
+                            {eventTypes[groupIndex * 3 + 1]?.name}
+                          </h3>
+                          <span className="text-sm font-medium text-white/80">
+                            {eventTypes[groupIndex * 3 + 1]?.properties}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Bottom card */}
+                      <div 
+                        className="relative rounded-2xl overflow-hidden cursor-pointer w-[300px] h-[290px] group"
+                        onClick={() => handleEventSelect(eventTypes[groupIndex * 3 + 2]?.name)}
+                      >
+                        <img
+                          src={eventTypes[groupIndex * 3 + 2]?.image}
+                          alt={eventTypes[groupIndex * 3 + 2]?.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                          <h3 className="text-xl font-bold text-white mb-2">
+                            {eventTypes[groupIndex * 3 + 2]?.name}
+                          </h3>
+                          <span className="text-sm font-medium text-white/80">
+                            {eventTypes[groupIndex * 3 + 2]?.properties}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          </ScrollAnimatedSection>
+        </div>
       </div>
     </div>
   )

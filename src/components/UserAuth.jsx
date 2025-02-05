@@ -1,52 +1,51 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiUser, FiArrowRight, FiUserPlus, FiLogIn } from 'react-icons/fi';
-import { getUsername, setUsername, checkUsernameExists } from '../services/wishlistService';
+import { FiUser, FiArrowRight, FiUserPlus, FiLogIn, FiEye, FiEyeOff } from 'react-icons/fi';
+import { getStoredUser, createUser, verifyUser } from '../services/userService';
 import toast from 'react-hot-toast';
 
-export default function UsernameSetup() {
+export default function UserAuth() {
   const navigate = useNavigate();
-  const [username, setUsernameState] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasUsername, setHasUsername] = useState(null);
+  const [hasAccount, setHasAccount] = useState(null);
 
   useEffect(() => {
-    // Check if username already exists in localStorage
-    const existingUsername = getUsername();
-    if (existingUsername) {
+    // Check if user is already logged in
+    const user = getStoredUser();
+    if (user) {
       navigate('/events');
     }
   }, [navigate]);
 
   const handleInitialChoice = (choice) => {
-    setHasUsername(choice);
+    setHasAccount(choice);
   };
 
   const handleExistingUser = async (e) => {
     e.preventDefault();
     
-    if (!username.trim()) {
-      toast.error('Please enter your username');
+    if (!username.trim() || !password.trim()) {
+      toast.error('Please enter both username and password');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Check if username exists
-      const exists = await checkUsernameExists(username.trim());
-      if (!exists) {
-        toast.error('Username not found. Please check your username or create a new one.');
-        setIsSubmitting(false);
+      const user = await verifyUser(username.trim(), password);
+      if (!user) {
+        toast.error('Invalid credentials. Please check your username and password.');
         return;
       }
 
-      setUsername(username.trim());
       toast.success('Welcome back to Nokonice!');
       navigate('/events');
     } catch (error) {
-      console.error('Error checking username:', error);
-      toast.error('Failed to verify username');
+      console.error('Error signing in:', error);
+      toast.error('Failed to sign in');
     } finally {
       setIsSubmitting(false);
     }
@@ -55,34 +54,34 @@ export default function UsernameSetup() {
   const handleNewUser = async (e) => {
     e.preventDefault();
     
-    if (!username.trim()) {
-      toast.error('Please enter a username');
+    if (!username.trim() || !password.trim()) {
+      toast.error('Please fill in all fields');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Check if username already exists
-      const exists = await checkUsernameExists(username.trim());
-      if (exists) {
-        toast.error('This username is already taken. Please choose another one.');
-        setIsSubmitting(false);
-        return;
-      }
+      await createUser({
+        username: username.trim(),
+        password: password.trim()
+      });
 
-      setUsername(username.trim());
       toast.success('Welcome to Nokonice!');
       navigate('/events');
     } catch (error) {
-      console.error('Error setting username:', error);
-      toast.error('Failed to set username');
+      console.error('Error creating account:', error);
+      if (error.message === 'Username already taken') {
+        toast.error('This username is already taken. Please choose another one.');
+      } else {
+        toast.error('Failed to create account');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // Initial choice screen
-  if (hasUsername === null) {
+  if (hasAccount === null) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <motion.div
@@ -99,7 +98,7 @@ export default function UsernameSetup() {
                 Welcome to Nokonice
               </h1>
               <p className="text-gray-600">
-                Do you already have a username?
+                Do you already have an account?
               </p>
             </div>
 
@@ -110,7 +109,7 @@ export default function UsernameSetup() {
                          transition-colors flex items-center justify-center gap-2"
               >
                 <FiLogIn className="w-5 h-5" />
-                Yes, I have a username
+                Yes, I have an account
               </button>
               <button
                 onClick={() => handleInitialChoice(false)}
@@ -118,7 +117,7 @@ export default function UsernameSetup() {
                          transition-colors flex items-center justify-center gap-2"
               >
                 <FiUserPlus className="w-5 h-5" />
-                No, create new username
+                No, create new account
               </button>
             </div>
           </div>
@@ -137,23 +136,23 @@ export default function UsernameSetup() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              {hasUsername ? (
+              {hasAccount ? (
                 <FiLogIn className="w-8 h-8 text-blue-500" />
               ) : (
                 <FiUserPlus className="w-8 h-8 text-green-500" />
               )}
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {hasUsername ? 'Enter Your Username' : 'Create New Username'}
+              {hasAccount ? 'Sign In' : 'Create Account'}
             </h1>
             <p className="text-gray-600">
-              {hasUsername 
-                ? 'Please enter your existing username to continue'
-                : 'Choose a username to get started with creating your wishlists'}
+              {hasAccount 
+                ? 'Please enter your credentials to continue'
+                : 'Create an account to get started with your wishlists'}
             </p>
           </div>
 
-          <form onSubmit={hasUsername ? handleExistingUser : handleNewUser} className="space-y-6">
+          <form onSubmit={hasAccount ? handleExistingUser : handleNewUser} className="space-y-6">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
                 Username
@@ -163,10 +162,38 @@ export default function UsernameSetup() {
                 type="text"
                 required
                 value={username}
-                onChange={(e) => setUsernameState(e.target.value)}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder={hasUsername ? 'Enter your username' : 'Choose a username'}
+                placeholder={hasAccount ? 'Enter your username' : 'Choose a username'}
               />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+                  placeholder={hasAccount ? 'Enter your password' : 'Create a password'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? (
+                    <FiEyeOff className="w-5 h-5" />
+                  ) : (
+                    <FiEye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -175,13 +202,23 @@ export default function UsernameSetup() {
                 disabled={isSubmitting}
                 className={`w-full px-6 py-3 text-white rounded-xl
                          transition-colors flex items-center justify-center gap-2 disabled:opacity-50
-                         ${hasUsername ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'}`}
+                         ${hasAccount ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'}`}
               >
                 {isSubmitting ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 ) : (
                   <>
-                    {hasUsername ? 'Continue' : 'Create Username'}
+                    {hasAccount ? (
+                      <>
+                        <FiLogIn className="w-5 h-5" />
+                        Sign In
+                      </>
+                    ) : (
+                      <>
+                        <FiUserPlus className="w-5 h-5" />
+                        Create Account
+                      </>
+                    )}
                     <FiArrowRight className="w-5 h-5" />
                   </>
                 )}
@@ -189,7 +226,7 @@ export default function UsernameSetup() {
               
               <button
                 type="button"
-                onClick={() => setHasUsername(null)}
+                onClick={() => setHasAccount(null)}
                 className="w-full px-6 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 
                          transition-colors flex items-center justify-center gap-2"
               >

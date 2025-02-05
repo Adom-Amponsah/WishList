@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
+    "@paystack/inline-js": "^2.22.2",
     "@supabase/supabase-js": "^2.48.1",
     "@tailwindcss/vite": "^4.0.0",
     "axios": "^1.7.9",
@@ -26,6 +27,7 @@
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.5.1",
     "react-icons": "^5.4.0",
+    "react-paystack": "^6.0.0",
     "react-router-dom": "^7.1.3",
     "scrape": "^0.2.3",
     "short-unique-id": "^5.2.0",
