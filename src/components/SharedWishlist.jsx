@@ -165,7 +165,7 @@ export default function SharedWishlist() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 text-white overflow-hidden">
+      <div className="relative bg-gradient-to-br from-gray-800 via-gray-700 to-gray-600 text-white overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
@@ -178,7 +178,7 @@ export default function SharedWishlist() {
               repeat: Infinity,
               ease: "linear"
             }}
-            className="absolute -top-1/2 -right-1/4 w-[400px] h-[400px] bg-white/10 rounded-full blur-3xl"
+            className="absolute -top-1/2 -right-1/4 w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl"
           />
           <motion.div
             animate={{
@@ -190,19 +190,29 @@ export default function SharedWishlist() {
               repeat: Infinity,
               ease: "linear"
             }}
-            className="absolute -bottom-1/2 -left-1/4 w-[400px] h-[400px] bg-white/10 rounded-full blur-3xl"
+            className="absolute -bottom-1/2 -left-1/4 w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl"
           />
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 pt-8 pb-16 md:pt-12 md:pb-20">
+        <div className="relative max-w-6xl mx-auto px-4 pt-6 pb-12 md:pt-8 md:pb-16">
           <div className="flex flex-col items-center text-center">
+            {/* Logo */}
+            <motion.img
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              src="/images/LockUp_White.png"
+              alt="Nokonice Logo"
+              className="h-10 md:h-12 mb-6"
+            />
+
             {/* Content with enhanced animations */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="flex items-center gap-6 mb-4"
+              className="flex items-center gap-4"
             >
               {/* Animated gift box */}
               <motion.div
@@ -213,7 +223,7 @@ export default function SharedWishlist() {
                   stiffness: 260,
                   damping: 20
                 }}
-                className="relative w-16 h-16 md:w-20 md:h-20 shrink-0"
+                className="relative w-12 h-12 md:w-14 md:h-14 shrink-0"
               >
                 <motion.div
                   animate={{ rotate: [0, 10, -10, 0] }}
@@ -226,7 +236,7 @@ export default function SharedWishlist() {
                            backdrop-blur-sm rounded-xl shadow-2xl transform"
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <FiGift className="w-8 h-8 md:w-10 md:h-10 text-white/90" />
+                    <FiGift className="w-6 h-6 md:w-8 md:h-8 text-white/90" />
                   </div>
                   <div className="absolute inset-0 bg-white/20 rounded-xl transform rotate-45 scale-50" />
                 </motion.div>
@@ -238,40 +248,10 @@ export default function SharedWishlist() {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2 }}
                   className="inline-block px-3 py-1 rounded-full 
-                           bg-white/10 backdrop-blur-sm text-sm font-medium border border-white/10 mb-2"
+                           bg-white/10 backdrop-blur-sm text-sm font-medium border border-white/10"
                 >
-                  {wishlist.eventType} Wishlist
+                  {wishlist.name} Wishlist
                 </motion.div>
-
-                <h1 className="text-2xl md:text-4xl font-bold bg-clip-text text-transparent 
-                           bg-gradient-to-r from-white via-blue-100 to-white"
-                >
-                  {wishlist.name}
-                </h1>
-
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-sm md:text-base text-blue-100 mt-1"
-                >
-                  Created with{" "}
-                  <motion.span
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                    className="inline-block text-pink-300"
-                  >
-                    ❤️
-                  </motion.span>
-                  {" "}by{" "}
-                  <span className="font-semibold">
-                    {wishlist.userData.name}
-                  </span>
-                </motion.p>
               </div>
             </motion.div>
           </div>
@@ -280,22 +260,38 @@ export default function SharedWishlist() {
         {/* Enhanced decorative bottom curve */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg
-            viewBox="0 0 1440 100"
-            className="w-full h-auto fill-gray-50"
+            viewBox="0 0 1440 120"
+            className="w-full h-[60px] fill-gray-50"
             preserveAspectRatio="none"
           >
-            <motion.path
-              initial={{ d: "M0,96L1440,96L1440,100L0,100Z" }}
-              animate={{ 
-                d: "M0,16L48,18.7C96,21,192,27,288,40C384,53,480,75,576,77.3C672,80,768,64,864,56C960,48,1056,48,1152,45.3C1248,43,1344,37,1392,34.7L1440,32L1440,100L1392,100C1344,100,1248,100,1152,100C1056,100,960,100,864,100C768,100,672,100,576,100C480,100,384,100,288,100C192,100,96,100,48,100L0,100Z"
-              }}
-              transition={{
-                duration: 1,
-                ease: "easeOut",
-                delay: 0.2
-              }}
-            />
+            <path
+              d="M0,0L48,5.3C96,11,192,21,288,37.3C384,53,480,75,576,69.3C672,64,768,32,864,26.7C960,21,1056,43,1152,48C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"
+            >
+              <animate
+                attributeName="d"
+                dur="5s"
+                repeatCount="indefinite"
+                values={`
+                  M0,0L48,5.3C96,11,192,21,288,37.3C384,53,480,75,576,69.3C672,64,768,32,864,26.7C960,21,1056,43,1152,48C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z;
+                  M0,0L48,16C96,32,192,64,288,69.3C384,75,480,53,576,42.7C672,32,768,32,864,42.7C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z;
+                  M0,0L48,5.3C96,11,192,21,288,37.3C384,53,480,75,576,69.3C672,64,768,32,864,26.7C960,21,1056,43,1152,48C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z
+                `}
+              />
+            </path>
           </svg>
+        </div>
+
+        {/* Curly waves decoration */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.1 }}
+              transition={{ duration: 1 }}
+              className="absolute inset-0 bg-[url('/curly-waves.svg')] bg-repeat opacity-10"
+              style={{ backgroundSize: '24px 24px' }}
+            />
+          </div>
         </div>
       </div>
 
