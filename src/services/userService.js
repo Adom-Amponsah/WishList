@@ -171,4 +171,73 @@ export const getUserById = async (userId) => {
     console.error('Error getting user:', error);
     throw error;
   }
+};
+
+// Update user details
+export const updateUserDetails = async (userId, userDetails) => {
+  try {
+    const userRef = doc(db, USERS_COLLECTION, userId);
+    const updateData = {
+      name: userDetails.name,
+      email: userDetails.email,
+      phone: userDetails.phone,
+      dateOfBirth: userDetails.dateOfBirth,
+      location: userDetails.location,
+      hasCompletedDetails: true,
+      updatedAt: serverTimestamp()
+    };
+
+    await updateDoc(userRef, updateData);
+
+    // Update stored user data
+    const storedUser = getStoredUser();
+    if (storedUser && storedUser.id === userId) {
+      setStoredUser({
+        ...storedUser,
+        ...updateData,
+        updatedAt: new Date().toISOString()
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error updating user details:', error);
+    throw error;
+  }
+};
+
+// Get user details
+export const getUserDetails = async (userId) => {
+  try {
+    const userRef = doc(db, USERS_COLLECTION, userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      return null;
+    }
+
+    const userData = userSnap.data();
+    return {
+      name: userData.name,
+      email: userData.email,
+      phone: userData.phone,
+      dateOfBirth: userData.dateOfBirth,
+      location: userData.location,
+      hasCompletedDetails: userData.hasCompletedDetails || false
+    };
+  } catch (error) {
+    console.error('Error getting user details:', error);
+    throw error;
+  }
+};
+
+// Check if user has completed their details
+export const hasUserCompletedDetails = async (userId) => {
+  try {
+    const userDetails = await getUserDetails(userId);
+    return userDetails?.hasCompletedDetails || false;
+  } catch (error) {
+    console.error('Error checking user details completion:', error);
+    return false;
+  }
 }; 

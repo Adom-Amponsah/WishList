@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getWishlistById, removeItemFromWishlist, deleteWishlist, updateWishlistUser } from '../services/wishlistService'
+import { getWishlistById, removeItemFromWishlist, deleteWishlist, updateWishlistUser, updateItemQuantity } from '../services/wishlistService'
+import { getUserDetails, updateUserDetails, getStoredUser } from '../services/userService'
 import { encodeWishlistToURL } from '../utils/wishlistUrlUtils'
 import toast from 'react-hot-toast'
-import { FiCalendar, FiGift, FiShare2, FiExternalLink, FiTrash2, FiX, FiLink } from 'react-icons/fi'
+import { FiCalendar, FiGift, FiShare2, FiExternalLink, FiTrash2, FiX, FiLink, FiEdit2, FiPlus, FiMinus, FiCheck } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 
@@ -20,12 +21,8 @@ export default function WishlistDetails() {
   
   const [wishlist, setWishlist] = useState(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showShareModal, setShowShareModal] = useState(false)
-  const [userData, setUserData] = useState({
-    name: '',
-    email: '',
-    phone: ''
-  })
+  const [showUserForm, setShowUserForm] = useState(false)
+  const [userDetails, setUserDetails] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [shareableLink, setShareableLink] = useState('')
   const [isSharing, setIsSharing] = useState(false)
@@ -37,7 +34,22 @@ export default function WishlistDetails() {
     // Scroll to top when component mounts
     window.scrollTo({ top: 0, behavior: 'smooth' })
     loadWishlist()
+    checkUserDetails()
   }, [id])
+
+  const checkUserDetails = async () => {
+    try {
+      const user = getStoredUser()
+      if (!user?.id) return
+
+      const details = await getUserDetails(user.id)
+      if (details?.hasCompletedDetails) {
+        setUserDetails(details)
+      }
+    } catch (error) {
+      console.error('Error checking user details:', error)
+    }
+  }
 
   const loadWishlist = async () => {
     try {
@@ -95,8 +107,8 @@ export default function WishlistDetails() {
   }
 
   const handleUserDataSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault()
+    setIsSubmitting(true)
 
     try {
       const userData = {
@@ -105,39 +117,65 @@ export default function WishlistDetails() {
         phone: phoneRef.current.value,
         dateOfBirth: dobRef.current.value,
         location: locationRef.current.value
-      };
-
-      if (!userData.name || !userData.email || !userData.phone || !userData.dateOfBirth || !userData.location) {
-        toast.error('Please fill in all fields');
-        return;
       }
 
-      const shareableUrl = await updateWishlistUser(id, userData);
+      // Validate required fields
+      if (!userData.name || !userData.email || !userData.phone || !userData.dateOfBirth || !userData.location) {
+        toast.error('Please fill in all fields')
+        return
+      }
+
+      // Update user details in users collection
+      const user = getStoredUser()
+      if (user?.id) {
+        await updateUserDetails(user.id, userData)
+      }
+
+      // Update wishlist with user data
+      const shareableUrl = await updateWishlistUser(id, userData)
       if (shareableUrl) {
-        setShareableLink(shareableUrl);
-        setShowShareModal(true);
-        toast.success('Wishlist updated successfully!');
+        setUserDetails(userData)
+        setShareableLink(shareableUrl)
+        toast.success('Wishlist updated successfully!')
       } else {
-        toast.error('Failed to update wishlist');
+        toast.error('Failed to update wishlist')
       }
     } catch (error) {
-      console.error('Error updating wishlist:', error);
-      toast.error(error.message || 'Failed to update wishlist');
+      console.error('Error updating wishlist:', error)
+      toast.error(error.message || 'Failed to update wishlist')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleShare = async () => {
     try {
       setIsSharing(true);
-      await navigator.clipboard.writeText(shareableLink);
-      setShareSuccess('Link copied to clipboard!');
-      toast.success('Link copied to clipboard!');
+      const user = getStoredUser();
+      if (!user?.id) {
+        toast.error('Please sign in to share your wishlist');
+        return;
+      }
+
+      // Check if user has completed details
+      const details = await getUserDetails(user.id);
+      if (details?.hasCompletedDetails) {
+        // User has details, directly generate and show link
+        const shareableUrl = await updateWishlistUser(id, details);
+        if (shareableUrl) {
+          setShareableLink(shareableUrl);
+          setShowUserForm(true); // Show modal with just the link
+          toast.success('Your wishlist is ready to share!');
+        } else {
+          toast.error('Failed to generate shareable link');
+        }
+      } else {
+        // User needs to fill in details
+        setShowUserForm(true); // Show form to collect details
+      }
     } catch (error) {
-      setShareError('Failed to copy link');
-      console.error('Share error:', error);
-      toast.error('Failed to copy link');
+      console.error('Error sharing wishlist:', error);
+      toast.error('Failed to share wishlist');
     } finally {
       setIsSharing(false);
     }
@@ -170,7 +208,7 @@ export default function WishlistDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Dynamic Header */}
       <div className="relative h-[300px] md:h-[400px] overflow-hidden">
         {/* Animated background circles */}
@@ -308,12 +346,23 @@ export default function WishlistDetails() {
               </motion.div>
             </div>
             <button
-              onClick={() => setShowShareModal(true)}
+              onClick={handleShare}
+              disabled={isSharing}
               className="w-full md:w-auto px-6 py-3 bg-blue-500 text-white rounded-xl 
-                     hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                       hover:bg-blue-600 transition-colors flex items-center justify-center gap-2
+                       disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FiShare2 className="w-5 h-5" />
-              Share Wishlist
+              {isSharing ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Generating Link...
+                </>
+              ) : (
+                <>
+                  <FiShare2 className="w-5 h-5" />
+                  Share Wishlist
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -453,17 +502,17 @@ export default function WishlistDetails() {
 
       {/* Share Modal */}
       <AnimatePresence>
-        {showShareModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+      {showUserForm && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => !shareableLink && setShowShareModal(false)}
-          >
-            <motion.div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => !shareableLink && setShowUserForm(false)}
+        >
+          <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+            animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl"
               onClick={e => e.stopPropagation()}
@@ -473,7 +522,7 @@ export default function WishlistDetails() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-bold text-gray-900">Share Your Wishlist</h3>
                     <button
-                      onClick={() => setShowShareModal(false)}
+                      onClick={() => setShowUserForm(false)}
                       className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                     >
                       <FiX className="w-5 h-5" />
@@ -485,94 +534,90 @@ export default function WishlistDetails() {
                   </p>
 
                   <form onSubmit={handleUserDataSubmit} className="space-y-6">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name
-                      </label>
-                      <input
-                        id="name"
-                        ref={nameRef}
-                        type="text"
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your full name"
-                      />
-                    </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  ref={nameRef}
+                  type="text"
+                  defaultValue={userDetails?.name || ''}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  ref={emailRef}
+                  type="email"
+                  defaultValue={userDetails?.email || ''}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
 
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address
-                      </label>
-                      <input
-                        id="email"
-                        ref={emailRef}
-                        type="email"
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your email address"
-                      />
-                    </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
+                <input
+                  ref={phoneRef}
+                  type="tel"
+                  defaultValue={userDetails?.phone || ''}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
 
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone Number
-                      </label>
-                      <input
-                        id="phone"
-                        ref={phoneRef}
-                        type="tel"
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your phone number"
-                      />
-                    </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Birth
+                </label>
+                <input
+                  ref={dobRef}
+                  type="date"
+                  defaultValue={userDetails?.dateOfBirth || ''}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
 
-                    <div>
-                      <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-1">
-                        Date of Birth
-                      </label>
-                      <input
-                        id="dob"
-                        ref={dobRef}
-                        type="date"
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Location
+                </label>
+                <input
+                  ref={locationRef}
+                  type="text"
+                  defaultValue={userDetails?.location || ''}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
 
-                    <div>
-                      <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                        Location
-                      </label>
-                      <input
-                        id="location"
-                        ref={locationRef}
-                        type="text"
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your location"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
                       className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl font-medium
                                hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed
                                flex items-center justify-center gap-2"
-                    >
-                      {isSubmitting ? (
-                        <>
+                >
+                  {isSubmitting ? (
+                    <>
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                           Updating...
-                        </>
-                      ) : (
+                    </>
+                  ) : (
                         <>
                           <FiShare2 className="w-5 h-5" />
                           Share Wishlist
                         </>
-                      )}
-                    </button>
+                  )}
+                </button>
                   </form>
                 </>
               ) : (
@@ -598,12 +643,12 @@ export default function WishlistDetails() {
                     >
                       Copy
                     </button>
-                  </div>
+              </div>
 
                   <button
                     onClick={() => {
-                      setShowShareModal(false);
-                      setShareableLink('');
+                      setShowUserForm(false)
+                      setShareableLink('')
                     }}
                     className="w-full px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
                   >
@@ -611,9 +656,9 @@ export default function WishlistDetails() {
                   </button>
                 </>
               )}
-            </motion.div>
           </motion.div>
-        )}
+        </motion.div>
+      )}
       </AnimatePresence>
     </div>
   )
