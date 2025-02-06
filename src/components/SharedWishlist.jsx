@@ -52,6 +52,12 @@ export default function SharedWishlist() {
     setShowContributeModal(true);
   };
 
+  // Add service fee calculation function
+  const calculateServiceFee = (amount) => {
+    // 5% service fee
+    return amount * 0.05;
+  };
+
   const handlePaystackResponse = async (reference, amount, item, isFullGift = false) => {
     setIsProcessing(true);
     try {
@@ -100,45 +106,56 @@ export default function SharedWishlist() {
     }
   };
 
-  const getPaystackProps = (amount, item, isFullGift = false) => ({
-    email: wishlist?.userData?.email || 'customer@example.com',
-    amount: Math.round(amount * 100), // Convert to pesewas
-    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-    text: isProcessing ? 'Processing...' : (isFullGift ? 'Gift Entire Item' : 'Contribute'),
-    currency: 'GHS',
-    metadata: {
-      wishlistId: shareId,
-      itemId: item.id,
-      isFullGift,
-      custom_fields: [
-        {
-          display_name: "Item Name",
-          variable_name: "item_name",
-          value: item.title
-        },
-        {
-          display_name: "For",
-          variable_name: "recipient_name",
-          value: wishlist?.userData?.name || 'Unknown'
-        },
-        {
-          display_name: "Contribution Type",
-          variable_name: "contribution_type",
-          value: isFullGift ? 'Full Gift' : 'Partial Contribution'
-        },
-        {
-          display_name: "Amount",
-          variable_name: "amount",
-          value: amount
-        }
-      ]
-    },
-    onSuccess: (reference) => handlePaystackResponse(reference, amount, item, isFullGift),
-    onClose: () => {
-      setShowContributeModal(false);
-      setIsProcessing(false);
-    }
-  });
+  const getPaystackProps = (amount, item, isFullGift = false) => {
+    const serviceFee = calculateServiceFee(amount);
+    const totalAmount = amount + serviceFee;
+
+    return {
+      email: wishlist?.userData?.email || 'customer@example.com',
+      amount: Math.round(totalAmount * 100), // Convert to pesewas
+      publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+      text: isProcessing ? 'Processing...' : (isFullGift ? 'Gift Entire Item' : 'Contribute'),
+      currency: 'GHS',
+      metadata: {
+        wishlistId: shareId,
+        itemId: item.id,
+        isFullGift,
+        serviceFee,
+        custom_fields: [
+          {
+            display_name: "Item Name",
+            variable_name: "item_name",
+            value: item.title
+          },
+          {
+            display_name: "For",
+            variable_name: "recipient_name",
+            value: wishlist?.userData?.name || 'Unknown'
+          },
+          {
+            display_name: "Contribution Type",
+            variable_name: "contribution_type",
+            value: isFullGift ? 'Full Gift' : 'Partial Contribution'
+          },
+          {
+            display_name: "Amount",
+            variable_name: "amount",
+            value: amount
+          },
+          {
+            display_name: "Service Fee",
+            variable_name: "service_fee",
+            value: serviceFee
+          }
+        ]
+      },
+      onSuccess: (reference) => handlePaystackResponse(reference, amount, item, isFullGift),
+      onClose: () => {
+        setShowContributeModal(false);
+        setIsProcessing(false);
+      }
+    };
+  };
 
   if (loading) {
     return (
@@ -322,9 +339,14 @@ export default function SharedWishlist() {
                 
                 <div className="flex flex-col gap-2 mb-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-blue-600">
-                      ₵{(item.price * (item.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
+                    <div className="flex items-end gap-2">
+                      <span className="text-2xl font-bold text-blue-600">
+                        ₵{(item.price * (item.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-sm text-gray-500 mb-1">
+                        + 5% service fee
+                      </span>
+                    </div>
                     {item.quantity > 1 && (
                       <span className="text-sm text-gray-500">
                         (₵{item.price.toLocaleString('en-US', { minimumFractionDigits: 2 })} each × {item.quantity})
@@ -442,8 +464,14 @@ export default function SharedWishlist() {
               <div className="space-y-4 mb-6">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Total Price:</span>
+                    <span className="text-gray-600">Item Price:</span>
                     <span className="font-medium">₵{(selectedItem.price * (selectedItem.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-600">Service Fee (5%):</span>
+                    <span className="font-medium text-gray-600">
+                      ₵{calculateServiceFee(selectedItem.price * (selectedItem.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
                   </div>
                   <div className="flex justify-between mb-2">
                     <span className="text-gray-600">Amount Raised:</span>
@@ -451,7 +479,7 @@ export default function SharedWishlist() {
                       ₵{((selectedItem.contributions || []).reduce((sum, contrib) => sum + contrib.amount, 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
                     <span className="text-gray-600">Amount Left:</span>
                     <span className="font-medium text-blue-600">
                       ₵{getRemainingAmount(selectedItem).toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -486,6 +514,23 @@ export default function SharedWishlist() {
                     />
                   </div>
                 </div>
+
+                {contributionAmount && Number(contributionAmount) > 0 && (
+                  <div className="bg-blue-50 p-4 rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Contribution Amount:</span>
+                      <span className="font-medium">₵{Number(contributionAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Service Fee (5%):</span>
+                      <span className="font-medium">₵{calculateServiceFee(Number(contributionAmount)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-base font-semibold border-t border-blue-100 pt-2 mt-2">
+                      <span className="text-gray-700">Total Amount:</span>
+                      <span className="text-blue-600">₵{(Number(contributionAmount) + calculateServiceFee(Number(contributionAmount))).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3">
