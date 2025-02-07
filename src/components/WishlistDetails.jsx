@@ -149,13 +149,46 @@ export default function WishlistDetails() {
   }
 
   const handleShare = async () => {
+    if (shareableLink) {
+      // If we already have a shareable link, copy it
+      try {
+        await navigator.clipboard.writeText(shareableLink);
+        toast.success('Link copied to clipboard!');
+      } catch (error) {
+        console.error('Share error:', error);
+        toast.error('Failed to copy link');
+      }
+      return;
+    }
+
+    // If we don't have a link yet, check user details and generate one
     try {
       setIsSharing(true);
-      await navigator.clipboard.writeText(shareableLink);
-      toast.success('Link copied to clipboard!');
+      const user = getStoredUser();
+      if (!user?.id) {
+        toast.error('Please sign in to share your wishlist');
+        return;
+      }
+
+      // Check if user has completed details
+      const details = await getUserDetails(user.id);
+      if (details?.hasCompletedDetails) {
+        // User has details, directly generate and show link
+        const shareableUrl = await updateWishlistUser(id, details);
+        if (shareableUrl) {
+          setShareableLink(shareableUrl);
+          setShowUserForm(true); // Show modal with just the link
+          toast.success('Your wishlist is ready to share!');
+        } else {
+          toast.error('Failed to generate shareable link');
+        }
+      } else {
+        // User needs to fill in details
+        setShowUserForm(true); // Show form to collect details
+      }
     } catch (error) {
-      console.error('Share error:', error);
-      toast.error('Failed to copy link');
+      console.error('Error sharing wishlist:', error);
+      toast.error('Failed to share wishlist');
     } finally {
       setIsSharing(false);
     }
