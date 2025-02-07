@@ -151,31 +151,11 @@ export default function WishlistDetails() {
   const handleShare = async () => {
     try {
       setIsSharing(true);
-      const user = getStoredUser();
-      if (!user?.id) {
-        toast.error('Please sign in to share your wishlist');
-        return;
-      }
-
-      // Check if user has completed details
-      const details = await getUserDetails(user.id);
-      if (details?.hasCompletedDetails) {
-        // User has details, directly generate and show link
-        const shareableUrl = await updateWishlistUser(id, details);
-        if (shareableUrl) {
-          setShareableLink(shareableUrl);
-          setShowUserForm(true); // Show modal with just the link
-          toast.success('Your wishlist is ready to share!');
-        } else {
-          toast.error('Failed to generate shareable link');
-        }
-      } else {
-        // User needs to fill in details
-        setShowUserForm(true); // Show form to collect details
-      }
+      await navigator.clipboard.writeText(shareableLink);
+      toast.success('Link copied to clipboard!');
     } catch (error) {
-      console.error('Error sharing wishlist:', error);
-      toast.error('Failed to share wishlist');
+      console.error('Share error:', error);
+      toast.error('Failed to copy link');
     } finally {
       setIsSharing(false);
     }
@@ -636,6 +616,7 @@ export default function WishlistDetails() {
                       readOnly
                       value={shareableLink}
                       className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600"
+                      onClick={(e) => e.target.select()}
                     />
                     <button
                       onClick={handleShare}
