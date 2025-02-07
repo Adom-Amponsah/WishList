@@ -10,6 +10,7 @@ export default function MyWishlists() {
   const [wishlists, setWishlists] = useState([])
   const [deleteModal, setDeleteModal] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     loadWishlists()
@@ -55,10 +56,11 @@ export default function MyWishlists() {
   }
 
   const handleDelete = async (id) => {
+    setIsDeleting(true)
     try {
       const success = await deleteWishlist(id)
       if (success) {
-        await loadWishlists() // Reload wishlists after deletion
+        await loadWishlists()
         toast.success('Wishlist deleted successfully')
         setDeleteModal(null)
       } else {
@@ -67,6 +69,8 @@ export default function MyWishlists() {
     } catch (error) {
       console.error('Error deleting wishlist:', error)
       toast.error('Failed to delete wishlist')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -279,10 +283,17 @@ export default function MyWishlists() {
                 <button
                   onClick={() => handleDelete(deleteModal.id)}
                   className="flex-1 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 text-sm md:text-base"
+                  disabled={isDeleting}
                 >
-                  Delete
+                  {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
+
+              {/* {isDeleting && (
+                <div className="text-center mt-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                </div>
+              )} */}
             </motion.div>
           </motion.div>
         )}
