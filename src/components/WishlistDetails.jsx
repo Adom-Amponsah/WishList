@@ -264,81 +264,58 @@ export default function WishlistDetails() {
           ))}
         </div>
 
-        {/* Floating items preview - Adjusted for mobile */}
-        <div className="absolute inset-0">
-          {wishlist.items.slice(0, 6).map((item, index) => (
-            <motion.div
-              key={item.id}
-              className="absolute"
-              initial={{
-                x: `${Math.random() * 80 + 10}%`,
-                y: `${Math.random() * 80 + 10}%`,
-                rotate: Math.random() * 30 - 15,
-                scale: 0
-              }}
-              animate={{
-                x: `${Math.random() * 80 + 10}%`,
-                y: `${Math.random() * 80 + 10}%`,
-                rotate: Math.random() * 30 - 15,
-                scale: [0.3, 0.4, 0.3]
-              }}
-              transition={{
-                duration: Math.random() * 5 + 5,
-                delay: index * 0.2,
-                repeat: Infinity,
-                repeatType: "reverse",
-                ease: "easeInOut"
-              }}
-            >
-              <div className="w-16 md:w-24 h-16 md:h-24 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm shadow-lg hover:scale-150 transition-transform">
-                <img
-                  src={item.image_url}
-                  alt={item.title}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
         {/* Content Overlay */}
-        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/30 via-black/20 to-black/30 flex items-center">
-          <div className="w-full px-4 md:px-6">
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              className="text-center"
+        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/30 via-black/20 to-black/30">
+          {/* Add logout button to top-right */}
+          <div className="absolute top-4 right-4 z-20">
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl 
+                       transition-colors flex items-center justify-center gap-2 backdrop-blur-sm"
             >
-              <motion.h1 
-                className="text-4xl md:text-6xl lg:text-8xl font-bold mb-4 md:mb-6 text-white"
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5 }}
+              <FiLogOut className="w-5 h-5" />
+              <span className="text-sm">Logout</span>
+            </button>
+          </div>
+          
+          <div className="h-full flex items-center">
+            <div className="w-full px-4 md:px-6">
+              <motion.div
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8 }}
+                className="text-center"
               >
-                {wishlist.name}
-              </motion.h1>
-              <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-6 text-white/90">
-                <motion.div
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex items-center gap-2"
+                <motion.h1 
+                  className="text-4xl md:text-6xl lg:text-8xl font-bold mb-4 md:mb-6 text-white"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <FiCalendar className="text-lg md:text-xl" />
-                  <span className="text-sm md:text-base">Created {new Date(wishlist.createdAt).toLocaleDateString()}</span>
-                </motion.div>
-                <motion.div
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex items-center gap-2"
-                >
-                  <FiGift className="text-lg md:text-xl" />
-                  <span className="text-sm md:text-base">{wishlist.eventType}</span>
-                </motion.div>
-              </div>
-            </motion.div>
+                  {wishlist.name}
+                </motion.h1>
+                <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-6 text-white/90">
+                  <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex items-center gap-2"
+                  >
+                    <FiCalendar className="text-lg md:text-xl" />
+                    <span className="text-sm md:text-base">Created {new Date(wishlist.createdAt).toLocaleDateString()}</span>
+                  </motion.div>
+                  <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex items-center gap-2"
+                  >
+                    <FiGift className="text-lg md:text-xl" />
+                    <span className="text-sm md:text-base">{wishlist.eventType}</span>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -369,35 +346,25 @@ export default function WishlistDetails() {
                 </p>
               </motion.div>
             </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleShare}
-                disabled={isSharing}
-                className="px-6 py-3 bg-[#970058] text-white rounded-xl 
-                         hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2
-                         disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSharing ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Generating Link...
-                  </>
-                ) : (
-                  <>
-                    <FiShare2 className="w-5 h-5" />
-                    Share Wishlist
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl 
-                         transition-colors flex items-center justify-center gap-2"
-              >
-                <FiLogOut className="w-5 h-5" />
-                Logout
-              </button>
-            </div>
+            <button
+              onClick={handleShare}
+              disabled={isSharing}
+              className="w-full md:w-auto px-6 py-3 bg-[#970058] text-white rounded-xl 
+                       hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2
+                       disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            >
+              {isSharing ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm sm:text-base">Generating Link...</span>
+                </>
+              ) : (
+                <>
+                  <FiShare2 className="w-5 h-5" />
+                  <span className="text-sm sm:text-base">Share Wishlist</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -414,44 +381,36 @@ export default function WishlistDetails() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
             {wishlist?.items.map((item) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl shadow-sm overflow-hidden"
+                className="bg-white rounded-lg md:rounded-xl shadow-sm overflow-hidden"
               >
                 <div className="aspect-square bg-gray-50">
                   <img
                     src={item.image_url}
                     alt={item.title}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain p-2 md:p-4"
                   />
                 </div>
-                <div className="p-4">
-                  <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">
+                <div className="p-2 md:p-4">
+                  <h3 className="font-medium text-gray-900 mb-1 md:mb-2 text-sm md:text-base line-clamp-2">
                     {item.title}
                   </h3>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-semibold text-[#970058]">
+                    <div className="flex items-center gap-1 md:gap-2">
+                      <span className="text-base md:text-lg font-semibold text-[#970058]">
                         ₵{(item.price * (item.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </span>
                       {item.quantity > 1 && (
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs md:text-sm text-gray-500">
                           (Qty: {item.quantity})
                         </span>
                       )}
                     </div>
-                    {/* <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-500 hover:text-blue-600"
-                    >
-                      View Item
-                    </a> */}
                   </div>
                 </div>
               </motion.div>

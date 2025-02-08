@@ -4,7 +4,32 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getWishlistById, addItemToWishlist, removeItemFromWishlist, getAllWishlists, updateItemQuantity } from '../services/wishlistService'
 import { getAllCategories, getProductsByCategory, searchProducts } from '../services/supabase'
 import toast from 'react-hot-toast'
-import { FiSearch, FiShoppingBag, FiX, FiChevronLeft, FiChevronRight, FiTrash2, FiPlus, FiCheck, FiMinus } from 'react-icons/fi'
+import { 
+  Search, 
+  ShoppingBag, 
+  X, 
+  ChevronLeft, 
+  ChevronRight, 
+  Trash2, 
+  Plus, 
+  Check, 
+  Minus,
+  Package,
+  LayoutGrid,
+  Baby,
+  BookOpen,
+  Plug,
+  Shirt,
+  Sofa,
+  Gamepad,
+  Scissors,
+  UtensilsCrossed,
+  Wrench,
+  Smartphone,
+  Dumbbell,
+  ShoppingCart,
+  Joystick
+} from 'lucide-react'
 
 export default function AddItemsPage() {
   const { id } = useParams()
@@ -42,7 +67,66 @@ export default function AddItemsPage() {
     loadWishlist()
   }, [id, navigate])
 
-  // Fetch categories on mount
+  // Get icon for category
+  const getCategoryIcon = (categoryName) => {
+    const icons = {
+      'BABY SUPPLIES': Baby,
+      'BOOKS & STATIONERY': BookOpen,
+      'ELECTRICAL APPLIANCES': Plug,
+      'FASHION & LUGGAGE': Shirt,
+      'FURNITURE': Sofa,
+      'GAMING': Gamepad,
+      'HAIR & COSMETICS': Scissors,
+      'HOME & KITCHEN ESSENTIALS': UtensilsCrossed,
+      'LIGHTING & HARDWARE': Wrench,
+      'MOBILES & COMPUTERS': Smartphone,
+      'SPORTS & FITNESS': Dumbbell,
+      'SUPERMARKET': ShoppingCart,
+      'TOYS & ENTERTAINMENT': Joystick
+    }
+    const Icon = icons[categoryName] || Package
+    return Icon
+  }
+
+  // Fetch random products from different categories on mount
+  useEffect(() => {
+    const fetchRandomProducts = async () => {
+      setLoading(true)
+      try {
+        // Get all categories first
+        const categoriesData = await getAllCategories()
+        if (!categoriesData?.length) return
+
+        // Get 2-3 random products from each category
+        const allProducts = []
+        const shuffledCategories = [...categoriesData].sort(() => Math.random() - 0.5)
+        
+        // Take first 4 categories randomly
+        for (const category of shuffledCategories.slice(0, 4)) {
+          const result = await getProductsByCategory(category.name, 1, 3)
+          if (result?.products?.length) {
+            allProducts.push(...result.products)
+          }
+        }
+
+        // Shuffle the combined products
+        const shuffledProducts = allProducts.sort(() => Math.random() - 0.5)
+        
+        setProducts(shuffledProducts)
+        setHasNextPage(false)
+        setCurrentPage(1)
+        setTotalItems(shuffledProducts.length)
+      } catch (error) {
+        console.error('Error loading random products:', error)
+        toast.error('Failed to load products')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchRandomProducts()
+  }, [])
+
+  // Modified categories fetch - don't select default
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -66,7 +150,30 @@ export default function AddItemsPage() {
       } else if (category) {
         result = await getProductsByCategory(category, page, itemsPerPage)
       } else {
-        result = { products: [], totalCount: 0, hasNextPage: false, currentPage: 1 }
+        // When returning to Discover Items, fetch random products
+        const categoriesData = await getAllCategories()
+        if (!categoriesData?.length) {
+          result = { products: [], totalCount: 0, hasNextPage: false, currentPage: 1 }
+          return
+        }
+
+        const allProducts = []
+        const shuffledCategories = [...categoriesData].sort(() => Math.random() - 0.5)
+        
+        for (const category of shuffledCategories.slice(0, 4)) {
+          const categoryResult = await getProductsByCategory(category.name, 1, 3)
+          if (categoryResult?.products?.length) {
+            allProducts.push(...categoryResult.products)
+          }
+        }
+
+        const shuffledProducts = allProducts.sort(() => Math.random() - 0.5)
+        result = {
+          products: shuffledProducts,
+          totalCount: shuffledProducts.length,
+          hasNextPage: false,
+          currentPage: 1
+        }
       }
 
       setProducts(result.products)
@@ -74,7 +181,7 @@ export default function AddItemsPage() {
       setCurrentPage(result.currentPage)
       setTotalItems(result.totalCount)
 
-      if (result.products.length === 0) {
+      if (result.products.length === 0 && !loading) {
         toast.info('No products found')
       }
     } catch (error) {
@@ -132,10 +239,10 @@ export default function AddItemsPage() {
     return wishlist?.items?.some(item => item.id === id) ?? false;
   }
 
-  const handleAddItem = async (product) => {
-    setAddingItems(prev => ({ ...prev, [product.id]: true }))
+  const handleAddItem = async (item) => {
+    setAddingItems(prev => ({ ...prev, [item.id]: true }))
     try {
-      const success = await addItemToWishlist(id, product)
+      const success = await addItemToWishlist(id, item)
       if (success) {
         const updatedWishlist = await getWishlistById(id)
         setWishlist(updatedWishlist)
@@ -152,7 +259,7 @@ export default function AddItemsPage() {
       console.error('Error adding item:', error)
       toast.error(error.message || 'Failed to add item to wishlist')
     } finally {
-      setAddingItems(prev => ({ ...prev, [product.id]: false }))
+      setAddingItems(prev => ({ ...prev, [item.id]: false }))
     }
   }
 
@@ -186,239 +293,589 @@ export default function AddItemsPage() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
-      {/* Mobile Header */}
-      <div className="md:hidden sticky top-0 z-30 bg-white shadow-sm p-4">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => navigate(`/wishlist/${id}`)}
-            className="flex items-center gap-2 text-gray-600"
+    <div className="min-h-screen bg-gray-50">
+      {/* Even Wilder Search Bar Design */}
+      <div className="sticky top-0 z-30 bg-gradient-to-br from-[#970058] via-[#C21878] to-[#970058]">
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Enhanced animated background elements */}
+          {[...Array(30)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full bg-gradient-to-br from-white/20 to-transparent backdrop-blur-sm"
+              initial={{
+                width: Math.random() * 150 + 50,
+                height: Math.random() * 150 + 50,
+                x: Math.random() * 100 + '%',
+                y: Math.random() * 100,
+                scale: 0,
+                rotate: Math.random() * 360
+              }}
+              animate={{
+                x: Math.random() * 100 + '%',
+                y: Math.random() * 100,
+                scale: [1, 1.2, 1],
+                opacity: [0.1, 0.3, 0.1],
+                rotate: [0, 180, 360]
+              }}
+              transition={{
+                duration: Math.random() * 8 + 5,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut"
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="container mx-auto px-4 py-4 md:py-8 relative">
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="relative"
           >
-            <FiChevronLeft className="w-5 h-5" />
-            Back
-          </button>
-          <button
-            onClick={() => setShowCart(!showCart)}
-            className="relative p-2 text-gray-600"
-          >
-            <FiShoppingBag className="w-6 h-6" />
-            {wishlist?.items?.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                {wishlist.items.length}
-              </span>
-            )}
-          </button>
+            <form onSubmit={handleSearch} className="relative flex flex-col gap-4">
+              <div className="relative flex items-center">
+                <div className="relative flex-1 group">
+                  {/* Pulsing background effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-white/30 rounded-2xl blur-xl"
+                    animate={{
+                      scale: [1, 1.05, 1],
+                      opacity: [0.5, 0.8, 0.5],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      ease: "easeInOut"
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="What are you looking for today?"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 md:pl-14 pr-4 py-4 md:py-6 rounded-2xl border-2 border-white/30 bg-white/10 
+                             text-white placeholder-white/70 focus:ring-4 focus:ring-white/30 focus:border-transparent
+                             backdrop-blur-sm transition-all text-base md:text-lg shadow-lg"
+                  />
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2"
+                  >
+                    <Search className="w-6 h-6 md:w-7 md:h-7 text-white/70" />
+                  </motion.div>
+                </div>
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.05, rotate: [0, -5, 5, 0] }}
+                  whileTap={{ scale: 0.95 }}
+                  className="ml-2 md:ml-4 px-4 md:px-8 py-4 md:py-6 bg-white text-[#970058] rounded-2xl font-semibold
+                           hover:bg-white/90 transition-all flex items-center gap-2 shadow-lg
+                           relative overflow-hidden group"
+                >
+                  <Search className="w-5 h-5 md:w-6 md:h-6" />
+                  <span className="hidden md:inline">Search</span>
+                </motion.button>
+              </div>
+
+              {/* Enhanced Popular Categories Pills */}
+              <div className="flex flex-wrap items-center gap-3 text-white/70 text-sm">
+                {/* <span className="font-medium">Trending:</span>
+                <div className="flex flex-wrap gap-2">
+                  {['iPhone', 'Samsung TV', 'Nike Shoes', 'PlayStation 5'].map((term, index) => (
+                    <motion.button
+                      key={term}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ 
+                        scale: 1.05,
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setSearchQuery(term)
+                        handleSearch()
+                      }}
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm
+                               border border-white/20 transition-all shadow-lg relative overflow-hidden group"
+                    >
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        initial={{ x: '-100%' }}
+                        whileHover={{ x: '100%' }}
+                        transition={{ duration: 0.5 }}
+                      />
+                      {term}
+                    </motion.button>
+                  ))}
+                </div> */}
+              </div>
+            </form>
+          </motion.div>
         </div>
       </div>
 
-      {/* Left Side - Categories and Search Results */}
-      <div className={`w-full md:w-[70%] bg-white ${showCart ? 'hidden md:block' : 'block'}`}>
-        <div className="p-4 md:p-8">
-          <div className="mb-6 md:mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold">Add Items to {wishlist?.name}</h1>
-          </div>
-
-          {/* Categories Section - Grid layout on mobile */}
-          <div className="mb-6 md:mb-8">
-            <h2 className="text-xl font-semibold mb-4">Categories</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategorySelect(category.name)}
-                  className={`w-full md:w-auto px-4 py-2 rounded-full transition-all text-center ${selectedCategory === category.name
-                      ? 'bg-[#970058] text-white'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                    }`}
-                >
-                  {category.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Search Section */}
-          <div className="mb-6 md:mb-8">
-            <form onSubmit={handleSearch} className="flex gap-2">
-              <div className="flex-1 relative">
-                <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for items..."
-                  className="w-full pl-12 pr-4 py-3 md:py-4 border-2 border-gray-200 rounded-xl 
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-6 md:px-8 py-3 md:py-4 bg-[#970058] text-white rounded-xl hover:bg-blue-600
-                         whitespace-nowrap"
+      {/* Enhanced Categories Design */}
+      <div className="bg-white shadow-lg relative overflow-hidden">
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-r from-[#970058]/5 via-[#C21878]/5 to-[#970058]/5"
+          animate={{
+            x: ['-100%', '100%'],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "linear"
+          }}
+        />
+        
+        <div className="container mx-auto px-4 py-4 md:py-6 relative">
+          <div className="overflow-x-auto scrollbar-hide">
+            <motion.div 
+              className="flex gap-2 md:gap-4 pb-2"
+              drag="x"
+              dragConstraints={{ right: 0, left: -1200 }}
+              dragElastic={0.2}
+            >
+              <motion.button
+                onClick={() => {
+                  setSelectedCategory(null)
+                  setSearchQuery('')
+                  setCurrentPage(1)
+                  fetchProducts(null, 1)
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  boxShadow: "0 10px 30px -10px rgba(151, 0, 88, 0.4)"
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="flex-shrink-0"
               >
-                Search
-              </button>
-            </form>
-          </div>
+                <div className={`flex flex-col items-center gap-2 md:gap-3 w-24 md:w-32 p-3 md:p-4 rounded-xl md:rounded-2xl transition-all
+                  relative overflow-hidden group
+                  ${!selectedCategory
+                    ? 'bg-gradient-to-br from-[#970058] to-[#C21878] text-white shadow-lg'
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    initial={{ x: '-100%', opacity: 0 }}
+                    animate={!selectedCategory ? {
+                      x: ['100%'],
+                      opacity: [0, 1, 0]
+                    } : {}}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  <div className={`p-2 md:p-3 rounded-xl ${
+                    !selectedCategory
+                      ? 'bg-white/20'
+                      : 'bg-white'
+                  }`}>
+                    <motion.div
+                      animate={!selectedCategory ? {
+                        rotate: [0, 180],
+                        scale: [1, 1.1, 1]
+                      } : {}}
+                      transition={{
+                        duration: 5,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                    >
+                      <LayoutGrid className="w-6 h-6 md:w-7 md:h-7" />
+                    </motion.div>
+                  </div>
+                  <span className="text-xs md:text-sm font-medium">
+                    Discover Items
+                  </span>
+                </div>
+              </motion.button>
 
-          {/* Products Grid */}
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                {products.map((product) => (
-                  <div
-                    key={product.id}
-                    className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 w-full"
+              {categories.map((category, index) => {
+                const Icon = getCategoryIcon(category.name)
+                return (
+                  <motion.button
+                    key={category.id}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => handleCategorySelect(category.name)}
+                    whileHover={{ 
+                      scale: 1.05,
+                      boxShadow: "0 10px 30px -10px rgba(151, 0, 88, 0.4)"
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex-shrink-0"
                   >
-                    <div className="aspect-square mb-3">
+                    <div className={`flex flex-col items-center gap-2 md:gap-3 w-24 md:w-32 p-3 md:p-4 rounded-xl md:rounded-2xl transition-all
+                      relative overflow-hidden group
+                      ${selectedCategory === category.name
+                        ? 'bg-gradient-to-br from-[#970058] to-[#C21878] text-white shadow-lg'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        initial={{ x: '-100%', opacity: 0 }}
+                        animate={selectedCategory === category.name ? {
+                          x: ['100%'],
+                          opacity: [0, 1, 0]
+                        } : {}}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      />
+                      <div className={`p-2 md:p-3 rounded-xl ${
+                        selectedCategory === category.name
+                          ? 'bg-white/20'
+                          : 'bg-white'
+                      }`}>
+                        <motion.div
+                          animate={selectedCategory === category.name ? {
+                            rotate: [0, 360],
+                            scale: [1, 1.1, 1]
+                          } : {}}
+                          transition={{
+                            duration: 5,
+                            repeat: Infinity,
+                            ease: "linear"
+                          }}
+                        >
+                          <Icon className="w-6 h-6 md:w-7 md:h-7" />
+                        </motion.div>
+                      </div>
+                      <span className="text-xs md:text-sm font-medium line-clamp-2 text-center">
+                        {category.name}
+                      </span>
+                    </div>
+                  </motion.button>
+                )
+              })}
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Cart Button for Mobile */}
+      <AnimatePresence>
+        {wishlist?.items?.length > 0 && (
+          <motion.button
+            initial={{ scale: 0, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0, y: 20 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowCart(true)}
+            className="md:hidden fixed bottom-6 right-6 z-50 bg-gradient-to-r from-[#970058] to-[#C21878]
+                     w-16 h-16 rounded-full shadow-lg flex items-center justify-center"
+          >
+            <div className="relative">
+              <ShoppingBag className="w-7 h-7 text-white" />
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full
+                         flex items-center justify-center text-sm font-bold text-[#970058]"
+              >
+                {wishlist?.items?.length}
+              </motion.div>
+            </div>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Cart Slide-in Panel */}
+      <AnimatePresence>
+        {showCart && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            className="fixed inset-0 z-50 md:hidden"
+          >
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowCart(false)} />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="absolute right-0 top-0 bottom-0 w-full max-w-[350px] bg-white shadow-xl"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold">Added Items</h2>
+                  <button onClick={() => setShowCart(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                
+                {/* Cart Items Content */}
+                {wishlist?.items?.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center text-center py-8">
+                    <ShoppingBag className="w-12 h-12 text-gray-400 mb-4" />
+                    <p className="text-gray-600">No items added yet</p>
+                    <p className="text-sm text-gray-500 mt-2">Click the + button on items to add them</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+                    {wishlist?.items.map((item) => (
+                      <div key={item.id} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                        <img
+                          src={item.image_url}
+                          alt={item.title}
+                          className="w-16 h-16 object-contain bg-white rounded-lg"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                            {item.title}
+                          </h3>
+                          <p className="text-[#970058] text-sm font-semibold mt-1">
+                            ₵{item.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={() => handleQuantityChange(item.id, -1)}
+                              className="p-1 hover:bg-white rounded"
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="text-sm w-6 text-center">{item.quantity}</span>
+                            <button
+                              onClick={() => handleQuantityChange(item.id, 1)}
+                              className="p-1 hover:bg-white rounded"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleRemoveItem(item.id)}
+                              className="ml-auto p-1 text-red-500 hover:bg-white rounded"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => {
+                    setShowCart(false)
+                    navigate(`/wishlist/${id}`)
+                  }}
+                  className="w-full mt-6 px-6 py-3 bg-[#970058] text-white rounded-xl 
+                           hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  View Wishlist
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content with Added Items Side Panel */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex gap-6">
+          {/* Products Section */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">
+                {selectedCategory || 'Discover Items'}
+              </h2>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#970058]"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {products.map((product) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-xl shadow-sm overflow-hidden"
+                  >
+                    <div className="aspect-square bg-gray-50 relative overflow-hidden">
                       <img
                         src={product.image_url}
                         alt={product.title}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain p-2"
                       />
+                      <button
+                        onClick={() => handleAddItem(product)}
+                        disabled={isItemInWishlist(product.id) || addingItems[product.id]}
+                        className={`absolute bottom-4 right-4 p-2 rounded-full shadow-lg
+                          ${isItemInWishlist(product.id)
+                            ? 'bg-green-500'
+                            : 'bg-[#970058]'
+                          }`}
+                      >
+                        {isItemInWishlist(product.id) ? (
+                          <Check className="w-5 h-5 text-white" />
+                        ) : addingItems[product.id] ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Plus className="w-5 h-5 text-white" />
+                        )}
+                      </button>
                     </div>
-                    <h3 className="text-sm md:text-lg font-semibold mb-2 line-clamp-2">{product.title}</h3>
-                    <div className="flex flex-col gap-1 mb-3">
-                      <span className="text-base md:text-lg font-bold text-blue-600">₵{product.price.toFixed(2)}</span>
-                      <span className="text-xs md:text-sm text-gray-600">{product.category}</span>
+                    <div className="p-4">
+                      <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">
+                        {product.title}
+                      </h3>
+                      <p className="text-[#970058] font-semibold">
+                        ₵{product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </p>
                     </div>
-                    <button
-                      onClick={() => handleAddItem(product)}
-                      disabled={isItemInWishlist(product.id) || addingItems[product.id]}
-                      className={`w-full py-2 rounded transition-colors flex items-center justify-center gap-2
-                        ${isItemInWishlist(product.id)
-                          ? 'bg-blue-400 text-white cursor-not-allowed'
-                          : addingItems[product.id]
-                            ? 'bg-blue-400 text-white cursor-not-allowed'
-                            : 'bg-[#970058] text-white hover:bg-blue-600'
-                        }`}
-                    >
-                      {isItemInWishlist(product.id) ? (
-                        <>
-                          <FiCheck /> Added to Wishlist
-                        </>
-                      ) : addingItems[product.id] ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Adding...</span>
-                        </>
-                      ) : (
-                        <>
-                          <FiPlus /> Add to Wishlist
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
+            )}
 
-              {/* Pagination */}
-              {products.length > 0 && (
-                <div className="flex justify-between items-center mt-6 md:mt-8">
+            {/* Pagination Controls */}
+            {!loading && totalItems > 0 && (
+              <div className="mt-8 flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} items
+                </div>
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-lg text-sm ${currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-blue-500 hover:bg-gray-50'
-                      }`}
+                    className="p-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                   >
-                    Previous
+                    <ChevronLeft className="w-5 h-5" />
                   </button>
-                  <span className="text-sm text-gray-600">
-                    {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.ceil(totalItems / itemsPerPage) }).map((_, index) => {
+                      const pageNumber = index + 1;
+                      // Show first page, last page, current page, and one page before and after current
+                      if (
+                        pageNumber === 1 ||
+                        pageNumber === Math.ceil(totalItems / itemsPerPage) ||
+                        (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm
+                              ${currentPage === pageNumber
+                                ? 'bg-[#970058] text-white'
+                                : 'text-gray-600 hover:bg-gray-50'
+                              }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      } else if (
+                        pageNumber === currentPage - 2 ||
+                        pageNumber === currentPage + 2
+                      ) {
+                        return <span key={pageNumber} className="px-1">...</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={!hasNextPage}
-                    className={`px-4 py-2 rounded-lg text-sm ${!hasNextPage
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-blue-500 hover:bg-gray-50'
-                      }`}
+                    className="p-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                   >
-                    Next
+                    <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
+              </div>
+            )}
+          </div>
 
-      {/* Right Side - Added Items */}
-      <div id="cart-section" className={`w-full md:w-[30%] bg-gray-50 p-4 md:p-6 overflow-y-auto ${!showCart ? 'hidden md:block' : 'block'}`}>
-        <div className="sticky top-0 bg-gray-50 pb-4 mb-4">
-          <h2 className="text-xl font-semibold mb-2">Added Items</h2>
-          <p className="text-sm text-gray-600">
-            {wishlist?.items?.length || 0} items • Total: ₵
-            {(wishlist?.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </p>
-        </div>
-
-        <div className="space-y-3 md:space-y-4">
-          <AnimatePresence>
-            {wishlist?.items?.map((item) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex gap-3 md:gap-4 bg-white p-3 md:p-4 rounded-lg shadow-sm relative"
-              >
-                <img src={item.image_url} alt={item.title} className="w-16 md:w-20 h-16 md:h-20 object-contain" />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm mb-1 line-clamp-2">{item.title}</h3>
-                  <span className="text-[#970058] font-semibold">₵{(item.price * (item.quantity || 1)).toFixed(2)}</span>
-                  
-                  {/* Quantity Controls */}
-                  <div className="flex items-center gap-2 mt-2">
-                    <button
-                      onClick={() => handleQuantityChange(item.id, -1)}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                      disabled={item.quantity <= 1}
-                    >
-                      <FiMinus className={`w-4 h-4 ${item.quantity <= 1 ? 'text-gray-300' : 'text-gray-600'}`} />
-                    </button>
-                    <span className="text-sm font-medium w-6 text-center">{item.quantity || 1}</span>
-                    <button
-                      onClick={() => handleQuantityChange(item.id, 1)}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    >
-                      <FiPlus className="w-4 h-4 text-gray-600" />
-                    </button>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleRemoveItem(item.id)}
-                  className="absolute bottom-3 right-3 p-2 text-red-500 hover:bg-red-50 rounded-full"
-                >
-                  <FiTrash2 className="w-4 h-4" />
-                </button>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {(!wishlist?.items || wishlist?.items?.length === 0) && (
-            <div className="text-center text-gray-500 py-8">
-              <FiShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No items added yet</p>
+          {/* Added Items Section */}
+          <div className="hidden md:block w-[350px] bg-white rounded-xl shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">Added Items</h2>
+              <div className="flex items-center gap-2 text-[#970058]">
+                <ShoppingBag className="w-5 h-5" />
+                <span className="font-medium">{wishlist?.items?.length || 0}</span>
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Done Button */}
-        <div className="sticky bottom-0 pt-4 mt-4 bg-gray-50">
-          <button
-            onClick={() => navigate('/my-wishlists')}
-            className="w-full py-4 bg-[#970058] text-white rounded-xl font-medium
-                     hover:bg-blue-600 transition-colors"
-          >
-            Share
-          </button>
+            {wishlist?.items?.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-8">
+                <ShoppingBag className="w-12 h-12 text-gray-400 mb-4" />
+                <p className="text-gray-600">No items added yet</p>
+                <p className="text-sm text-gray-500 mt-2">Click the + button on items to add them</p>
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                {wishlist?.items.map((item) => (
+                  <div key={item.id} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                    <img
+                      src={item.image_url}
+                      alt={item.title}
+                      className="w-16 h-16 object-contain bg-white rounded-lg"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                        {item.title}
+                      </h3>
+                      <p className="text-[#970058] text-sm font-semibold mt-1">
+                        ₵{item.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={() => handleQuantityChange(item.id, -1)}
+                          className="p-1 hover:bg-white rounded"
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="text-sm w-6 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() => handleQuantityChange(item.id, 1)}
+                          className="p-1 hover:bg-white rounded"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleRemoveItem(item.id)}
+                          className="ml-auto p-1 text-red-500 hover:bg-white rounded"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={() => navigate(`/wishlist/${id}`)}
+              className="w-full mt-6 px-6 py-3 bg-[#970058] text-white rounded-xl 
+                       hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              View Wishlist
+            </button>
+          </div>
         </div>
       </div>
     </div>
