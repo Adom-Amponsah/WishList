@@ -336,7 +336,11 @@ export default function SharedWishlist() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                   {item.title}
                 </h3>
-                
+                {item.quantity > 1 && (
+                      <span className="text-left text-sm text-gray-500 justify-start align-start flex">
+                        {item.quantity} items at ₵{item.price.toLocaleString('en-US', { minimumFractionDigits: 2 })} each
+                      </span>
+                    )}
                 <div className="flex flex-col gap-2 mb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-end gap-2">
@@ -344,14 +348,10 @@ export default function SharedWishlist() {
                         ₵{(item.price * (item.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </span>
                       <span className="text-sm text-gray-500 mb-1">
-                        + 5% service fee
+                        + service fee
                       </span>
                     </div>
-                    {item.quantity > 1 && (
-                      <span className="text-sm text-gray-500">
-                        (₵{item.price.toLocaleString('en-US', { minimumFractionDigits: 2 })} each × {item.quantity})
-                      </span>
-                    )}
+                   
                   </div>
 
                   {/* Contribution Progress */}
@@ -395,7 +395,7 @@ export default function SharedWishlist() {
                                  hover:bg-blue-600 transition-all transform hover:scale-[1.02]
                                  flex items-center justify-center gap-2 font-medium"
                       >
-                        <FiDollarSign className="w-5 h-5" />
+                        {/* <FiDollarSign className="w-5 h-5" /> */}
                         Contribute
                       </button>
 
