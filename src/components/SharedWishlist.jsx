@@ -52,10 +52,24 @@ export default function SharedWishlist() {
     setShowContributeModal(true);
   };
 
-  // Add service fee calculation function
+  // Function to get the service fee percentage based on total wishlist value
+  const getServiceFeePercentage = () => {
+    const totalWishlistValue = wishlist.totalPrice;
+    return totalWishlistValue < 5000 ? 0.07 : 0.05;
+  };
+
+  // Calculate total service fee for the entire wishlist
+  const getTotalServiceFee = () => {
+    return wishlist.totalPrice * getServiceFeePercentage();
+  };
+
+  // Calculate service fee for a specific amount based on its proportion of the total wishlist value
   const calculateServiceFee = (amount) => {
-    // 5% service fee
-    return amount * 0.05;
+    const totalServiceFee = getTotalServiceFee();
+    // Calculate this amount's proportion of the total wishlist value
+    const proportion = amount / wishlist.totalPrice;
+    // Return this amount's share of the total service fee
+    return totalServiceFee * proportion;
   };
 
   const handlePaystackResponse = async (reference, amount, item, isFullGift = false) => {
@@ -426,17 +440,21 @@ export default function SharedWishlist() {
           ))}
         </div>
 
-        {/* Total Section */}
+        {/* Total Section with Service Fee Info */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-12 bg-white rounded-xl shadow-sm p-8 text-center"
+          className="mt-12 bg-white rounded-xl shadow-sm p-8"
         >
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Total Wishlist Value</h3>
-          <p className="text-4xl font-bold text-blue-600">
-            ₵{wishlist.totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </p>
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">Total Wishlist Value</h3>
+              <p className="text-4xl font-bold text-blue-600">
+                ₵{wishlist.totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+          </div>
         </motion.div>
       </div>
 
@@ -468,21 +486,9 @@ export default function SharedWishlist() {
                     <span className="font-medium">₵{(selectedItem.price * (selectedItem.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Service Fee (5%):</span>
-                    <span className="font-medium text-gray-600">
-                      ₵{calculateServiceFee(selectedItem.price * (selectedItem.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between mb-2">
                     <span className="text-gray-600">Amount Raised:</span>
                     <span className="font-medium text-green-600">
                       ₵{((selectedItem.contributions || []).reduce((sum, contrib) => sum + contrib.amount, 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                    <span className="text-gray-600">Amount Left:</span>
-                    <span className="font-medium text-blue-600">
-                      ₵{getRemainingAmount(selectedItem).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
@@ -522,7 +528,7 @@ export default function SharedWishlist() {
                       <span className="font-medium">₵{Number(contributionAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Service Fee (5%):</span>
+                      <span className="text-gray-600">Service Fee:</span>
                       <span className="font-medium">₵{calculateServiceFee(Number(contributionAmount)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between text-base font-semibold border-t border-blue-100 pt-2 mt-2">
