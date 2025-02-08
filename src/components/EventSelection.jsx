@@ -1,7 +1,9 @@
 import React from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FiList } from 'react-icons/fi'
+import { FiList, FiLogOut } from 'react-icons/fi'
+import { logoutUser } from '../services/userService'
+import toast from 'react-hot-toast'
 
 // Event types with their images
 const eventTypes = [
@@ -89,6 +91,17 @@ const ScrollAnimatedSection = ({ children, className = '' }) => {
 export default function EventSelection() {
   const navigate = useNavigate()
 
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      toast.success('Logged out successfully');
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to logout');
+    }
+  };
+
   const handleEventSelect = (eventType) => {
     // Navigate to the wishlist creator with the selected event type
     navigate(`/create/${eventType.toLowerCase().replace(/\s+/g, '-')}`)
@@ -105,14 +118,24 @@ export default function EventSelection() {
               alt="Nokonice Logo"
               className="h-9" // Adjust the height as needed
             />
-            <Link
-              to="/my-wishlists"
-              className="flex items-center gap-2 px-4 py-2 bg-[#970058] text-white rounded-lg 
-                       hover:bg-[#C21878] transition-colors"
-            >
-              <FiList className="w-5 h-5" />
-              My Wishlists
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/my-wishlists"
+                className="flex items-center gap-2 px-4 py-2 bg-[#970058] text-white rounded-lg 
+                         hover:bg-[#C21878] transition-colors"
+              >
+                <FiList className="w-5 h-5" />
+                My Wishlists
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg 
+                         transition-colors"
+              >
+                <FiLogOut className="w-5 h-5" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </nav>

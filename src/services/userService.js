@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   limit
 } from 'firebase/firestore';
+import { getAuth, signOut } from 'firebase/auth';
 
 // Collection name constant
 const USERS_COLLECTION = 'users';
@@ -250,5 +251,20 @@ export const hasUserCompletedDetails = async (userId) => {
   } catch (error) {
     console.error('Error checking user details completion:', error);
     return false;
+  }
+};
+
+// Logout user
+export const logoutUser = async () => {
+  try {
+    const auth = getAuth();
+    // Sign out from Firebase Auth (for Google auth)
+    await signOut(auth);
+    // Clear local storage
+    clearStoredUser();
+    return true;
+  } catch (error) {
+    console.error('Error logging out:', error);
+    throw error;
   }
 }; 

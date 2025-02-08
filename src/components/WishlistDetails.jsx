@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getWishlistById, removeItemFromWishlist, deleteWishlist, updateWishlistUser, updateItemQuantity } from '../services/wishlistService'
-import { getUserDetails, updateUserDetails, getStoredUser } from '../services/userService'
+import { getUserDetails, updateUserDetails, getStoredUser, logoutUser } from '../services/userService'
 import { encodeWishlistToURL } from '../utils/wishlistUrlUtils'
 import toast from 'react-hot-toast'
-import { FiCalendar, FiGift, FiShare2, FiExternalLink, FiTrash2, FiX, FiLink, FiEdit2, FiPlus, FiMinus, FiCheck } from 'react-icons/fi'
+import { FiCalendar, FiGift, FiShare2, FiExternalLink, FiTrash2, FiX, FiLink, FiEdit2, FiPlus, FiMinus, FiCheck, FiLogOut } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 
@@ -194,6 +194,17 @@ export default function WishlistDetails() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      toast.success('Logged out successfully');
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to logout');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -358,25 +369,35 @@ export default function WishlistDetails() {
                 </p>
               </motion.div>
             </div>
-            <button
-              onClick={handleShare}
-              disabled={isSharing}
-              className="w-full md:w-auto px-6 py-3 bg-[#970058] text-white rounded-xl 
-                       hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSharing ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Generating Link...
-                </>
-              ) : (
-                <>
-                  <FiShare2 className="w-5 h-5" />
-                  Share Wishlist
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleShare}
+                disabled={isSharing}
+                className="px-6 py-3 bg-[#970058] text-white rounded-xl 
+                         hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSharing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Generating Link...
+                  </>
+                ) : (
+                  <>
+                    <FiShare2 className="w-5 h-5" />
+                    Share Wishlist
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl 
+                         transition-colors flex items-center justify-center gap-2"
+              >
+                <FiLogOut className="w-5 h-5" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 
