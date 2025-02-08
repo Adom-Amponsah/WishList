@@ -2,8 +2,21 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiUser, FiArrowRight, FiUserPlus, FiLogIn, FiEye, FiEyeOff } from 'react-icons/fi';
-import { getStoredUser, createUser, verifyUser } from '../services/userService';
+import { FcGoogle } from 'react-icons/fc';
+import { getStoredUser, createUser, verifyUser, checkUsernameExists, setStoredUser } from '../services/userService';
 import toast from 'react-hot-toast';
+import { 
+  getAuth, 
+  signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider, 
+  browserLocalPersistence,
+  setPersistence,
+  inMemoryPersistence
+} from 'firebase/auth';
+import { serverTimestamp, collection, query, where, limit, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 export default function UserAuth() {
   const navigate = useNavigate();
@@ -19,6 +32,19 @@ export default function UserAuth() {
     if (user) {
       navigate('/events');
     }
+
+    // Check for redirect result
+    const auth = getAuth();
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          handleGoogleUserData(result.user);
+        }
+      })
+      .catch((error) => {
+        console.error('Redirect error:', error);
+        toast.error('Failed to sign in with Google');
+      });
   }, [navigate]);
 
   const handleInitialChoice = (choice) => {
@@ -80,6 +106,164 @@ export default function UserAuth() {
     }
   };
 
+  // Helper function to handle Google user data
+  const handleGoogleUserData = async (googleUser) => {
+    try {
+      setIsSubmitting(true);
+      // First, check if user exists by uid
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('uid', '==', googleUser.uid), limit(1));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // User exists, get their data and log them in
+        const userDoc = querySnapshot.docs[0];
+        const userData = {
+          id: userDoc.id,
+          ...userDoc.data(),
+          createdAt: userDoc.data().createdAt?.toDate().toISOString(),
+          updatedAt: userDoc.data().updatedAt?.toDate().toISOString()
+        };
+        setStoredUser(userData);
+        toast.success('Welcome back to Nokonice!', { duration: 2000 });
+        navigate('/events');
+        return;
+      }
+
+      // If we get here, user doesn't exist, so create new account
+      toast.loading('Creating your account...', { id: 'creating-account', duration: 0 });
+
+      // Create a username from the email (remove @domain.com and special characters)
+      const baseUsername = googleUser.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      
+      // Check if the base username exists
+      let username = baseUsername;
+      let counter = 1;
+      let exists = false;
+      
+      try {
+        exists = await checkUsernameExists(username);
+      } catch (error) {
+        if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || error.name === 'FirebaseError') {
+          toast.error(
+            'It seems your ad blocker is preventing the app from working. Please disable it for this site and try again.',
+            { duration: 6000 }
+          );
+          return;
+        }
+        throw error;
+      }
+      
+      // If username exists, append numbers until we find a unique one
+      while (exists) {
+        username = `${baseUsername}${counter}`;
+        exists = await checkUsernameExists(username);
+        counter++;
+      }
+
+      // Create user document with Google info
+      const userData = {
+        username: username,
+        email: googleUser.email,
+        displayName: googleUser.displayName,
+        photoURL: googleUser.photoURL,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        authProvider: 'google',
+        uid: googleUser.uid,
+        hasCompletedDetails: false
+      };
+
+      let userDoc;
+      try {
+        userDoc = await createUser(userData);
+        toast.dismiss('creating-account');
+      } catch (error) {
+        toast.dismiss('creating-account');
+        if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || error.name === 'FirebaseError') {
+          toast.error(
+            'It seems your ad blocker is preventing the app from working. Please disable it for this site and try again.',
+            { duration: 6000 }
+          );
+          return;
+        }
+        throw error;
+      }
+      
+      if (userDoc) {
+        toast.success('Account created successfully! Welcome to Nokonice!', { duration: 3000 });
+        navigate('/events');
+      } else {
+        toast.error('Failed to create user account', { duration: 3000 });
+      }
+    } catch (error) {
+      toast.dismiss('creating-account');
+      console.error('Error processing Google sign-in:', error);
+      if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || error.name === 'FirebaseError') {
+        toast.error(
+          'It seems your ad blocker is preventing the app from working. Please disable it for this site and try again.',
+          { duration: 4000 }
+        );
+      } else {
+        toast.error(error.message || 'Failed to process Google sign-in', { duration: 3000 });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Set auth persistence to LOCAL
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+      } catch (error) {
+        if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || error.name === 'FirebaseError') {
+          toast.error(
+            'It seems your ad blocker is preventing the app from working. Please disable it for this site and try again.',
+            { duration: 6000 }
+          );
+          return;
+        }
+        throw error;
+      }
+
+      // Try popup first
+      try {
+        const result = await signInWithPopup(auth, provider);
+        await handleGoogleUserData(result.user);
+      } catch (popupError) {
+        if (popupError.message?.includes('ERR_BLOCKED_BY_CLIENT') || popupError.name === 'FirebaseError') {
+          toast.error(
+            'It seems your ad blocker is preventing the app from working. Please disable it for this site and try again.',
+            { duration: 6000 }
+          );
+          return;
+        }
+        console.log('Popup blocked or failed, trying redirect...', popupError);
+        // If popup fails, fall back to redirect
+        await signInWithRedirect(auth, provider);
+      }
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || error.name === 'FirebaseError') {
+        toast.error(
+          'It seems your ad blocker is preventing the app from working. Please disable it for this site and try again.',
+          { duration: 6000 }
+        );
+      } else {
+        toast.error(error.message || 'Failed to sign in with Google');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Initial choice screen
   if (hasAccount === null) {
     return (
@@ -103,6 +287,34 @@ export default function UserAuth() {
             </div>
 
             <div className="space-y-4">
+              <button
+                onClick={handleGoogleSignIn}
+                disabled={isSubmitting}
+                className="w-full px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl 
+                         hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-5 h-5 border-t-2 border-blue-500 border-solid rounded-full animate-spin"></div>
+                    <span>Signing in...</span>
+                  </>
+                ) : (
+                  <>
+                    <FcGoogle className="w-5 h-5" />
+                    Continue with Google
+                  </>
+                )}
+              </button>
+              
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or</span>
+                </div>
+              </div>
+
               <button
                 onClick={() => handleInitialChoice(true)}
                 className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 
@@ -234,6 +446,35 @@ export default function UserAuth() {
               </button>
             </div>
           </form>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={isSubmitting}
+            className="w-full px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl 
+                     hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-5 h-5 border-t-2 border-blue-500 border-solid rounded-full animate-spin"></div>
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <FcGoogle className="w-5 h-5" />
+                Continue with Google
+              </>
+            )}
+          </button>
         </div>
       </motion.div>
     </div>

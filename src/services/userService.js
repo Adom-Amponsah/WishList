@@ -40,13 +40,24 @@ export const createUser = async (userData) => {
       throw new Error('Username already taken');
     }
 
-    // Create user document
+    // Create user document based on auth type
     const userDoc = {
       username: userData.username.toLowerCase(),
-      password: userData.password, // In a real app, this should be hashed
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
+
+    // If it's a Google auth user, add Google-specific fields
+    if (userData.authProvider === 'google') {
+      userDoc.email = userData.email;
+      userDoc.displayName = userData.displayName;
+      userDoc.photoURL = userData.photoURL;
+      userDoc.authProvider = 'google';
+      userDoc.uid = userData.uid;
+    } else {
+      // For regular username/password auth
+      userDoc.password = userData.password; // In a real app, this should be hashed
+    }
 
     const docRef = await addDoc(collection(db, USERS_COLLECTION), userDoc);
     const newUser = {

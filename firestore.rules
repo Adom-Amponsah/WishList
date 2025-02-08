@@ -24,10 +24,19 @@ service cloud.firestore {
       // Anyone can read user data (needed for wishlist sharing)
       allow read: if true;
       
-      // Anyone can create a new user account
-      allow create: if request.resource.data.keys().hasAll(['username', 'password', 'email', 'name', 'phone'])
-                   && request.resource.data.username is string
-                   && request.resource.data.username.size() > 0;
+      // Allow creation for both regular and Google auth users
+      allow create: if (
+        // For regular authentication
+        (request.resource.data.keys().hasAll(['username', 'password'])
+        && request.resource.data.username is string
+        && request.resource.data.username.size() > 0)
+        ||
+        // For Google authentication
+        (request.resource.data.keys().hasAll(['username', 'email', 'authProvider', 'uid'])
+        && request.resource.data.username is string
+        && request.resource.data.username.size() > 0
+        && request.resource.data.authProvider == 'google')
+      );
       
       // Anyone can update or delete user data (we'll add proper auth later)
       allow update, delete: if true;
