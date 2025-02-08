@@ -3,23 +3,27 @@
   "name": "Nokonice - Gift Registry & Wishlist",
   "icons": [
     {
-      "src": "/images/Logo.png",
+      "src": "/images/Logo_Black.png",
       "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/images/Logo.png",
+      "src": "/images/Logo_Black.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
-      "src": "/images/Logo.png",
+      "src": "/images/Logo_Black.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "theme_color": "#ffffff",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "description": "Create and share your wishlist with friends and family. The perfect way to organize gifts for any occasion."
 } 
