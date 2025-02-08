@@ -227,7 +227,7 @@ export default function AddItemsPage() {
                   key={category.id}
                   onClick={() => handleCategorySelect(category.name)}
                   className={`w-full md:w-auto px-4 py-2 rounded-full transition-all text-center ${selectedCategory === category.name
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-[#970058] text-white'
                       : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                 >
@@ -253,7 +253,7 @@ export default function AddItemsPage() {
               </div>
               <button
                 type="submit"
-                className="px-6 md:px-8 py-3 md:py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600
+                className="px-6 md:px-8 py-3 md:py-4 bg-[#970058] text-white rounded-xl hover:bg-blue-600
                          whitespace-nowrap"
               >
                 Search
@@ -291,10 +291,10 @@ export default function AddItemsPage() {
                       disabled={isItemInWishlist(product.id) || addingItems[product.id]}
                       className={`w-full py-2 rounded transition-colors flex items-center justify-center gap-2
                         ${isItemInWishlist(product.id)
-                          ? 'bg-green-500 text-white cursor-not-allowed'
+                          ? 'bg-blue-400 text-white cursor-not-allowed'
                           : addingItems[product.id]
                             ? 'bg-blue-400 text-white cursor-not-allowed'
-                            : 'bg-blue-500 text-white hover:bg-blue-600'
+                            : 'bg-[#970058] text-white hover:bg-blue-600'
                         }`}
                     >
                       {isItemInWishlist(product.id) ? (
@@ -372,7 +372,7 @@ export default function AddItemsPage() {
                 <img src={item.image_url} alt={item.title} className="w-16 md:w-20 h-16 md:h-20 object-contain" />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-sm mb-1 line-clamp-2">{item.title}</h3>
-                  <span className="text-blue-600 font-semibold">₵{(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                  <span className="text-[#970058] font-semibold">₵{(item.price * (item.quantity || 1)).toFixed(2)}</span>
                   
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-2 mt-2">
@@ -414,7 +414,7 @@ export default function AddItemsPage() {
         <div className="sticky bottom-0 pt-4 mt-4 bg-gray-50">
           <button
             onClick={() => navigate('/my-wishlists')}
-            className="w-full py-4 bg-blue-500 text-white rounded-xl font-medium
+            className="w-full py-4 bg-[#970058] text-white rounded-xl font-medium
                      hover:bg-blue-600 transition-colors"
           >
             Share

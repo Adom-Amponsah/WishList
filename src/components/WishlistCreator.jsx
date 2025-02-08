@@ -220,8 +220,8 @@ const WishlistCreator = () => {
                   disabled={isSubmitting || isCreating}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full px-6 py-4 bg-white text-gray-900 rounded-xl font-semibold
-                           hover:bg-white/90 transition-colors flex items-center justify-center gap-2
+                  className="w-full px-6 py-4 bg-[#970058] text-white rounded-xl font-semibold
+                           hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2
                            disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isCreating ? 'Creating...' : 'Create Wishlist'}

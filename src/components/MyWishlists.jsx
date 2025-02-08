@@ -149,7 +149,7 @@ export default function MyWishlists() {
           <Link
             to="/events"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 
-                     bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors
+                     bg-[#970058] text-white rounded-xl hover:bg-[#C21878] transition-colors
                      shadow-lg shadow-blue-500/20"
           >
             <FiPlus className="w-5 h-5" />
@@ -226,7 +226,7 @@ export default function MyWishlists() {
                     <div className="pt-3 md:pt-4 border-t border-gray-100">
                       <div className="flex items-center justify-between mb-3 md:mb-4">
                         <span className="text-sm text-gray-500">Total Value</span>
-                        <span className="text-lg md:text-2xl font-bold text-blue-600">
+                        <span className="text-lg md:text-2xl font-bold text-[#970058]">
                           ₵{(wishlist.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </span>
                       </div>

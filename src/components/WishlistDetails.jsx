@@ -353,7 +353,7 @@ export default function WishlistDetails() {
                 className="text-center md:text-left"
               >
                 <span className="text-sm text-gray-500">Total Value</span>
-                <p className="text-xl md:text-2xl font-bold text-blue-500">
+                <p className="text-xl md:text-2xl font-bold text-[#970058]">
                   ₵{wishlist.totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </p>
               </motion.div>
@@ -361,8 +361,8 @@ export default function WishlistDetails() {
             <button
               onClick={handleShare}
               disabled={isSharing}
-              className="w-full md:w-auto px-6 py-3 bg-blue-500 text-white rounded-xl 
-                       hover:bg-blue-600 transition-colors flex items-center justify-center gap-2
+              className="w-full md:w-auto px-6 py-3 bg-[#970058] text-white rounded-xl 
+                       hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2
                        disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSharing ? (
@@ -387,7 +387,7 @@ export default function WishlistDetails() {
             <h3 className="text-xl font-semibold text-gray-600 mb-4">No items in your wishlist yet</h3>
             <button
               onClick={() => navigate(`/wishlist/${id}/add-items`)}
-              className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
+              className="px-6 py-3 bg-[#970058] text-white rounded-xl hover:bg-[#C21878] transition-colors"
             >
               Start Adding Items
             </button>
@@ -414,7 +414,7 @@ export default function WishlistDetails() {
                   </h3>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-semibold text-blue-600">
+                      <span className="text-lg font-semibold text-[#970058]">
                         ₵{(item.price * (item.quantity || 1)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </span>
                       {item.quantity > 1 && (
