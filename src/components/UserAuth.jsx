@@ -275,15 +275,19 @@ export default function UserAuth() {
         >
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiUser className="w-8 h-8 text-blue-500" />
+              <div className="w-24 h-24 mx-auto mb-4">
+                <img 
+                  src="/images/Logo_Purple.png" 
+                  alt="Nokonice Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 Welcome to Nokonice
               </h1>
-              <p className="text-gray-600">
+              {/* <p className="text-gray-600">
                 Do you already have an account?
-              </p>
+              </p> */}
             </div>
 
             <div className="space-y-4">
@@ -347,12 +351,12 @@ export default function UserAuth() {
       >
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              {hasAccount ? (
-                <FiLogIn className="w-8 h-8 text-blue-500" />
-              ) : (
-                <FiUserPlus className="w-8 h-8 text-green-500" />
-              )}
+            <div className="w-24 h-24 mx-auto mb-4">
+              <img 
+                src="/images/Logo_Purple.png" 
+                alt="Nokonice Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               {hasAccount ? 'Sign In' : 'Create Account'}
