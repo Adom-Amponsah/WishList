@@ -28,8 +28,63 @@ import {
   Smartphone,
   Dumbbell,
   ShoppingCart,
-  Joystick
+  Joystick,
+  Heart,
+  HeartHandshake,
+  HeartPulse
 } from 'lucide-react'
+
+// Add Valentine's Hearts Component
+const ValentineHearts = () => {
+  // Create an array of heart elements with different properties
+  const hearts = Array.from({ length: 20 }).map((_, i) => ({
+    id: i,
+    icon: [Heart, HeartHandshake, HeartPulse][Math.floor(Math.random() * 3)],
+    initialX: Math.random() * window.innerWidth,
+    initialScale: Math.random() * 0.5 + 0.5,
+    duration: Math.random() * 10 + 15,
+    delay: Math.random() * 10,
+    rotate: Math.random() * 360
+  }));
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
+      {hearts.map((heart) => {
+        const Icon = heart.icon;
+        return (
+          <motion.div
+            key={heart.id}
+            initial={{ 
+              x: heart.initialX,
+              y: '100vh',
+              scale: heart.initialScale,
+              opacity: 0.3,
+              rotate: 0
+            }}
+            animate={{
+              y: '-20vh',
+              opacity: [0.3, 0.6, 0.3],
+              scale: [heart.initialScale, heart.initialScale * 1.2, heart.initialScale],
+              rotate: heart.rotate
+            }}
+            transition={{
+              duration: heart.duration,
+              repeat: Infinity,
+              delay: heart.delay,
+              ease: "linear"
+            }}
+            className="absolute text-pink-500/30"
+            style={{
+              filter: 'drop-shadow(0 0 10px rgba(236, 72, 153, 0.3))'
+            }}
+          >
+            <Icon className="w-8 h-8 md:w-12 md:h-12" />
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+};
 
 export default function AddItemsPage() {
   const { id } = useParams()
@@ -46,6 +101,7 @@ export default function AddItemsPage() {
   const [totalItems, setTotalItems] = useState(0)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [addingItems, setAddingItems] = useState({})
+  const [isValentinesDay, setIsValentinesDay] = useState(false)
 
   // Fetch wishlist data
   useEffect(() => {
@@ -54,6 +110,8 @@ export default function AddItemsPage() {
         const foundWishlist = await getWishlistById(id)
         if (foundWishlist) {
           setWishlist(foundWishlist)
+          // Check if it's a Valentine's Day wishlist
+          setIsValentinesDay(foundWishlist.eventType === "Valentine's Day")
         } else {
           toast.error('Wishlist not found')
           navigate('/my-wishlists')
@@ -290,8 +348,15 @@ export default function AddItemsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Add Valentine's Hearts if it's a Valentine's Day wishlist */}
+      {isValentinesDay && <ValentineHearts />}
+
       {/* Even Wilder Search Bar Design */}
-      <div className="sticky top-0 z-30 bg-gradient-to-br from-[#970058] via-[#C21878] to-[#970058]">
+      <div className={`sticky top-0 z-30 ${
+        isValentinesDay 
+          ? 'bg-gradient-to-br from-pink-500 via-red-400 to-pink-500'
+          : 'bg-gradient-to-br from-[#970058] via-[#C21878] to-[#970058]'
+      }`}>
         <div className="absolute inset-0 overflow-hidden">
           {/* Enhanced animated background elements */}
           {[...Array(30)].map((_, i) => (
@@ -691,14 +756,17 @@ export default function AddItemsPage() {
           {/* Products Section */}
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                {isValentinesDay && <Heart className="w-6 h-6 text-pink-500" />}
                 {selectedCategory || 'Discover Items'}
               </h2>
             </div>
 
             {loading ? (
               <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#970058]"></div>
+                <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
+                  isValentinesDay ? 'border-pink-500' : 'border-[#970058]'
+                }`}></div>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
