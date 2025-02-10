@@ -73,6 +73,10 @@ export const createWishlist = async (name, eventType) => {
       throw new Error('User data is required to create a wishlist');
     }
 
+    // Calculate expiry date (30 days from now)
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 30);
+
     // Normalize event type name for consistency
     const normalizedEventType = eventType === 'valentines-day' ? "Valentine's Day" : eventType;
 
@@ -80,6 +84,7 @@ export const createWishlist = async (name, eventType) => {
       name,
       eventType: normalizedEventType,
       createdAt: serverTimestamp(),
+      expiryDate: expiryDate.toISOString(),
       items: [],
       totalPrice: 0,
       username: userData.username.toLowerCase(),

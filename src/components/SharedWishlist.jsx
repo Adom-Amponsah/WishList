@@ -5,6 +5,7 @@ import { FiMail, FiPhone, FiHome, FiCreditCard, FiGift, FiHeart, FiDollarSign, F
 import { PaystackButton } from 'react-paystack';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import CountdownTimer from '../components/CountdownTimer';
 
 export default function SharedWishlist() {
   const { shareId } = useParams();
@@ -324,6 +325,16 @@ export default function SharedWishlist() {
             />
           </div>
         </div>
+      </div>
+
+      {/* Add CountdownTimer right after hero section */}
+      <div className="max-w-6xl mx-auto px-4 -mt-6 relative z-10">
+        {wishlist.expiryDate && (
+          <CountdownTimer 
+            expiryDate={wishlist.expiryDate} 
+            name={wishlist.username.toUpperCase()}
+          />
+        )}
       </div>
 
       {/* Items Grid */}
