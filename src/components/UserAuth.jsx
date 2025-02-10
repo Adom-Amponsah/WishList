@@ -219,45 +219,36 @@ export default function UserAuth() {
     try {
       setIsSubmitting(true);
       
-      // Set auth persistence to LOCAL
-      try {
-        await setPersistence(auth, browserLocalPersistence);
-      } catch (error) {
-        if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || error.name === 'FirebaseError') {
-          toast.error(
-            'It seems your ad blocker is preventing the app from working. Please disable it for this site and try again.',
-            { duration: 6000 }
-          );
-          return;
-        }
-        throw error;
-      }
-
       // Try popup first
       try {
         const result = await signInWithPopup(auth, provider);
         await handleGoogleUserData(result.user);
       } catch (popupError) {
-        if (popupError.message?.includes('ERR_BLOCKED_BY_CLIENT') || popupError.name === 'FirebaseError') {
+        console.log('Popup error:', popupError);
+        
+        // Check specific error cases
+        if (popupError.code === 'auth/popup-blocked') {
+          toast.error('Popup was blocked. Trying redirect sign-in instead...', { duration: 3000 });
+          await signInWithRedirect(auth, provider);
+        } else if (popupError.code === 'auth/unauthorized-domain') {
           toast.error(
-            'It seems your ad blocker is preventing the app from working. Please disable it for this site and try again.',
+            'This domain is not authorized for authentication. Please contact support.',
             { duration: 6000 }
           );
           return;
+        } else {
+          // For other errors, try redirect
+          console.log('Trying redirect sign-in...');
+          await signInWithRedirect(auth, provider);
         }
-        console.log('Popup blocked or failed, trying redirect...', popupError);
-        // If popup fails, fall back to redirect
-        await signInWithRedirect(auth, provider);
       }
     } catch (error) {
       console.error('Error signing in with Google:', error);
-      if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || error.name === 'FirebaseError') {
-        toast.error(
-          'It seems your ad blocker is preventing the app from working. Please disable it for this site and try again.',
-          { duration: 6000 }
-        );
+      
+      if (error.code === 'auth/cancelled-popup-request') {
+        toast.error('Sign-in was cancelled. Please try again.');
       } else {
-        toast.error(error.message || 'Failed to sign in with Google');
+        toast.error('Failed to sign in. Please try again later.');
       }
     } finally {
       setIsSubmitting(false);

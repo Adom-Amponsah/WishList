@@ -37,34 +37,35 @@ import {
 // Add Valentine's Hearts Component
 const ValentineHearts = () => {
   // Create an array of heart elements with different properties
-  const hearts = Array.from({ length: 20 }).map((_, i) => ({
+  const hearts = Array.from({ length: 15 }).map((_, i) => ({
     id: i,
     icon: [Heart, HeartHandshake, HeartPulse][Math.floor(Math.random() * 3)],
-    initialX: Math.random() * window.innerWidth,
-    initialScale: Math.random() * 0.5 + 0.5,
-    duration: Math.random() * 10 + 15,
+    initialX: Math.random() * 100,
+    initialY: 100 + Math.random() * 20, // Start slightly below the viewport
+    scale: Math.random() * 0.5 + 0.5,
+    duration: Math.random() * 20 + 10,
     delay: Math.random() * 10,
     rotate: Math.random() * 360
   }));
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-50">
       {hearts.map((heart) => {
         const Icon = heart.icon;
         return (
           <motion.div
             key={heart.id}
             initial={{ 
-              x: heart.initialX,
-              y: '100vh',
-              scale: heart.initialScale,
-              opacity: 0.3,
+              x: `${heart.initialX}vw`,
+              y: `${heart.initialY}vh`,
+              scale: heart.scale,
+              opacity: 0,
               rotate: 0
             }}
             animate={{
               y: '-20vh',
-              opacity: [0.3, 0.6, 0.3],
-              scale: [heart.initialScale, heart.initialScale * 1.2, heart.initialScale],
+              opacity: [0, 0.8, 0],
+              scale: [heart.scale, heart.scale * 1.2, heart.scale],
               rotate: heart.rotate
             }}
             transition={{
@@ -73,12 +74,18 @@ const ValentineHearts = () => {
               delay: heart.delay,
               ease: "linear"
             }}
-            className="absolute text-pink-500/30"
+            className="absolute text-pink-500"
             style={{
-              filter: 'drop-shadow(0 0 10px rgba(236, 72, 153, 0.3))'
+              filter: 'drop-shadow(0 0 8px rgba(236, 72, 153, 0.5))'
             }}
           >
-            <Icon className="w-8 h-8 md:w-12 md:h-12" />
+            <Icon 
+              className="w-8 h-8 md:w-12 md:h-12" 
+              style={{ 
+                strokeWidth: 1.5,
+                fill: 'rgba(236, 72, 153, 0.2)'
+              }} 
+            />
           </motion.div>
         );
       })}
