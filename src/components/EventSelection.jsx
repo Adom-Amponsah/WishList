@@ -4,9 +4,17 @@ import { motion } from 'framer-motion'
 import { FiList, FiLogOut } from 'react-icons/fi'
 import { logoutUser } from '../services/userService'
 import toast from 'react-hot-toast'
+import { Flame } from 'lucide-react'
 
 // Event types with their images
 const eventTypes = [
+  {
+    name: "Valentine's Day",
+    image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    properties: 'Show your love',
+    isHot: true,
+    urlSlug: 'valentines-day'  // Add explicit URL slug
+  },
   {
     name: 'Birthday',
     image: 'https://images.unsplash.com/photo-1558636508-e0db3814bd1d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
@@ -103,8 +111,11 @@ export default function EventSelection() {
   };
 
   const handleEventSelect = (eventType) => {
-    // Navigate to the wishlist creator with the selected event type
-    navigate(`/create/${eventType.toLowerCase().replace(/\s+/g, '-')}`)
+    // Find the event object
+    const event = eventTypes.find(e => e.name === eventType);
+    // Use the urlSlug if available, otherwise fallback to the previous logic
+    const urlPath = event?.urlSlug || eventType.toLowerCase().replace(/\s+/g, '-');
+    navigate(`/create/${urlPath}`);
   }
 
   return (
@@ -210,6 +221,22 @@ export default function EventSelection() {
                         alt={eventTypes[groupIndex * 3]?.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
+                      {/* Hot Event Indicator */}
+                      {eventTypes[groupIndex * 3]?.isHot && (
+                        <motion.div
+                          className="absolute top-4 right-4 bg-black/20 backdrop-blur-sm rounded-full p-2"
+                          animate={{
+                            scale: [1, 1.2, 1],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        >
+                          <Flame className="w-6 h-6 text-orange-500" />
+                        </motion.div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-6">
                         <h3 className="text-2xl font-bold text-white mb-2">
@@ -233,6 +260,22 @@ export default function EventSelection() {
                           alt={eventTypes[groupIndex * 3 + 1]?.name}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
+                        {/* Hot Event Indicator */}
+                        {eventTypes[groupIndex * 3 + 1]?.isHot && (
+                          <motion.div
+                            className="absolute top-4 right-4 bg-black/20 backdrop-blur-sm rounded-full p-2"
+                            animate={{
+                              scale: [1, 1.2, 1],
+                            }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                          >
+                            <Flame className="w-5 h-5 text-orange-500" />
+                          </motion.div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-6">
                           <h3 className="text-xl font-bold text-white mb-2">
@@ -254,6 +297,22 @@ export default function EventSelection() {
                           alt={eventTypes[groupIndex * 3 + 2]?.name}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
+                        {/* Hot Event Indicator */}
+                        {eventTypes[groupIndex * 3 + 2]?.isHot && (
+                          <motion.div
+                            className="absolute top-4 right-4 bg-black/20 backdrop-blur-sm rounded-full p-2"
+                            animate={{
+                              scale: [1, 1.2, 1],
+                            }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                          >
+                            <Flame className="w-5 h-5 text-orange-500" />
+                          </motion.div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-6">
                           <h3 className="text-xl font-bold text-white mb-2">

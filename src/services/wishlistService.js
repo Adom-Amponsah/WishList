@@ -73,14 +73,24 @@ export const createWishlist = async (name, eventType) => {
       throw new Error('User data is required to create a wishlist');
     }
 
+    // Normalize event type name for consistency
+    const normalizedEventType = eventType === 'valentines-day' ? "Valentine's Day" : eventType;
+
     const wishlistData = {
       name,
-      eventType,
+      eventType: normalizedEventType,
       createdAt: serverTimestamp(),
       items: [],
       totalPrice: 0,
       username: userData.username.toLowerCase(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      isHotEvent: normalizedEventType === "Valentine's Day", // Add flag for hot events
+      metadata: {
+        eventSlug: eventType,
+        isSeasonalEvent: normalizedEventType === "Valentine's Day",
+        seasonStartDate: normalizedEventType === "Valentine's Day" ? "2024-02-01" : null,
+        seasonEndDate: normalizedEventType === "Valentine's Day" ? "2024-02-14" : null
+      }
     };
     
     const docRef = await addDoc(collection(db, WISHLISTS_COLLECTION), wishlistData);

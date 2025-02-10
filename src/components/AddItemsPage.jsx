@@ -141,27 +141,30 @@ export default function AddItemsPage() {
   }, [])
 
   // Fetch products when category changes
-  const fetchProducts = async (category, page = 1) => {
+  const fetchProducts = async (category) => {
     setLoading(true)
     try {
       let result
       if (searchQuery.trim()) {
-        result = await searchProducts(searchQuery, page, itemsPerPage)
+        // Fetch all search results
+        result = await searchProducts(searchQuery, 1, 1000)
       } else if (category) {
-        result = await getProductsByCategory(category, page, itemsPerPage)
+        // Fetch all products for the category
+        result = await getProductsByCategory(category, 1, 1000)
       } else {
-        // When returning to Discover Items, fetch random products
+        // When returning to Discover Items, fetch random products from all categories
         const categoriesData = await getAllCategories()
         if (!categoriesData?.length) {
-          result = { products: [], totalCount: 0, hasNextPage: false, currentPage: 1 }
+          result = { products: [], totalCount: 0 }
           return
         }
 
         const allProducts = []
         const shuffledCategories = [...categoriesData].sort(() => Math.random() - 0.5)
         
-        for (const category of shuffledCategories.slice(0, 4)) {
-          const categoryResult = await getProductsByCategory(category.name, 1, 3)
+        // Get products from all categories
+        for (const category of shuffledCategories) {
+          const categoryResult = await getProductsByCategory(category.name, 1, 50)
           if (categoryResult?.products?.length) {
             allProducts.push(...categoryResult.products)
           }
@@ -170,19 +173,16 @@ export default function AddItemsPage() {
         const shuffledProducts = allProducts.sort(() => Math.random() - 0.5)
         result = {
           products: shuffledProducts,
-          totalCount: shuffledProducts.length,
-          hasNextPage: false,
-          currentPage: 1
+          totalCount: shuffledProducts.length
         }
       }
 
       setProducts(result.products)
-      setHasNextPage(result.hasNextPage)
-      setCurrentPage(result.currentPage)
-      setTotalItems(result.totalCount)
 
       if (result.products.length === 0 && !loading) {
         toast.info('No products found')
+      } else if (searchQuery.trim()) {
+        toast.success(`Found ${result.products.length} items`)
       }
     } catch (error) {
       toast.error('Failed to load products')
@@ -195,8 +195,7 @@ export default function AddItemsPage() {
   const handleCategorySelect = async (category) => {
     setSelectedCategory(category)
     setSearchQuery('') // Clear search when category changes
-    setCurrentPage(1)
-    await fetchProducts(category, 1)
+    await fetchProducts(category)
   }
 
   const handleSearch = async (e) => {
@@ -208,16 +207,13 @@ export default function AddItemsPage() {
 
     setLoading(true)
     try {
-      const result = await searchProducts(searchQuery, 1, itemsPerPage)
+      const result = await searchProducts(searchQuery, 1, 1000)
       setProducts(result.products)
-      setHasNextPage(result.hasNextPage)
-      setCurrentPage(1)
-      setTotalItems(result.totalCount)
 
       if (result.products.length === 0) {
         toast.info('No products found for your search')
       } else {
-        toast.success(`Found ${result.totalCount} items`)
+        toast.success(`Found ${result.products.length} items`)
       }
     } catch (error) {
       console.error('Search error:', error)
@@ -230,7 +226,7 @@ export default function AddItemsPage() {
   const handlePageChange = async (newPage) => {
     setCurrentPage(newPage)
     if (selectedCategory) {
-      await fetchProducts(selectedCategory, newPage)
+      await fetchProducts(selectedCategory)
     }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -447,7 +443,7 @@ export default function AddItemsPage() {
                   setSelectedCategory(null)
                   setSearchQuery('')
                   setCurrentPage(1)
-                  fetchProducts(null, 1)
+                  fetchProducts(null)
                 }}
                 whileHover={{ 
                   scale: 1.05,
@@ -747,62 +743,6 @@ export default function AddItemsPage() {
                     </div>
                   </motion.div>
                 ))}
-              </div>
-            )}
-
-            {/* Pagination Controls */}
-            {!loading && totalItems > 0 && (
-              <div className="mt-8 flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} items
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.ceil(totalItems / itemsPerPage) }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      // Show first page, last page, current page, and one page before and after current
-                      if (
-                        pageNumber === 1 ||
-                        pageNumber === Math.ceil(totalItems / itemsPerPage) ||
-                        (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
-                      ) {
-                        return (
-                          <button
-                            key={pageNumber}
-                            onClick={() => handlePageChange(pageNumber)}
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm
-                              ${currentPage === pageNumber
-                                ? 'bg-[#970058] text-white'
-                                : 'text-gray-600 hover:bg-gray-50'
-                              }`}
-                          >
-                            {pageNumber}
-                          </button>
-                        );
-                      } else if (
-                        pageNumber === currentPage - 2 ||
-                        pageNumber === currentPage + 2
-                      ) {
-                        return <span key={pageNumber} className="px-1">...</span>;
-                      }
-                      return null;
-                    })}
-                  </div>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={!hasNextPage}
-                    className="p-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
               </div>
             )}
           </div>

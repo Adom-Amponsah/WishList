@@ -9,6 +9,13 @@ import { FiPlus, FiChevronLeft } from 'react-icons/fi'
 // Import the same event types data
 const eventTypes = [
   {
+    name: "Valentine's Day",
+    image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    properties: 'Show your love',
+    isHot: true,
+    urlSlug: 'valentines-day'
+  },
+  {
     name: 'Birthday',
     image: 'https://images.unsplash.com/photo-1558636508-e0db3814bd1d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
     properties: 'Celebrate special days'
@@ -63,7 +70,7 @@ const WishlistCreator = () => {
 
   // Find the event data based on the URL parameter
   const selectedEvent = eventTypes.find(
-    event => event.name.toLowerCase().replace(/\s+/g, '-') === eventType
+    event => (event.urlSlug === eventType || event.name.toLowerCase().replace(/\s+/g, '-') === eventType)
   )
 
   const handleCreateWishlist = async (e) => {
