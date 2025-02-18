@@ -31,64 +31,302 @@ import {
   Joystick,
   Heart,
   HeartHandshake,
-  HeartPulse
+  HeartPulse,
+  Gift,
+  Cake,
+  GraduationCap,
+  Gem,
+  Baby as BabyIcon,
+  Home,
+  TreePine
 } from 'lucide-react'
+import { FiGift, FiHeart } from 'react-icons/fi'
+import { BsGiftFill, BsMusicNoteBeamed, BsStarFill, BsBalloonFill } from 'react-icons/bs'
 
-// Add Valentine's Hearts Component
-const ValentineHearts = () => {
-  // Create an array of heart elements with different properties
-  const hearts = Array.from({ length: 15 }).map((_, i) => ({
-    id: i,
-    icon: [Heart, HeartHandshake, HeartPulse][Math.floor(Math.random() * 3)],
-    initialX: Math.random() * 100,
-    initialY: 100 + Math.random() * 20, // Start slightly below the viewport
-    scale: Math.random() * 0.5 + 0.5,
-    duration: Math.random() * 20 + 10,
-    delay: Math.random() * 10,
-    rotate: Math.random() * 360
-  }));
-
-  return (
-    <div className="fixed inset-0 pointer-events-none z-50">
-      {hearts.map((heart) => {
-        const Icon = heart.icon;
-        return (
+// Event-specific floating icons component
+const FloatingEventIcons = ({ eventType }) => {
+  const getEventIcons = () => {
+    switch(eventType?.toLowerCase()) {
+      case "valentine's day":
+        return Array(10).fill().map((_, i) => (
           <motion.div
-            key={heart.id}
+            key={i}
             initial={{ 
-              x: `${heart.initialX}vw`,
-              y: `${heart.initialY}vh`,
-              scale: heart.scale,
-              opacity: 0,
-              rotate: 0
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              opacity: 0 
             }}
             animate={{
-              y: '-20vh',
-              opacity: [0, 0.8, 0],
-              scale: [heart.scale, heart.scale * 1.2, heart.scale],
-              rotate: heart.rotate
+              x: [
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth
+              ],
+              y: [
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerHeight
+              ],
+              opacity: [0.2, 0.5, 0.2],
+              scale: [1, 1.2, 1]
             }}
             transition={{
-              duration: heart.duration,
+              duration: Math.random() * 10 + 20,
               repeat: Infinity,
-              delay: heart.delay,
               ease: "linear"
             }}
-            className="absolute text-pink-500"
-            style={{
-              filter: 'drop-shadow(0 0 8px rgba(236, 72, 153, 0.5))'
-            }}
+            className="absolute text-pink-500/20"
           >
-            <Icon 
-              className="w-8 h-8 md:w-12 md:h-12" 
-              style={{ 
-                strokeWidth: 1.5,
-                fill: 'rgba(236, 72, 153, 0.2)'
-              }} 
-            />
+            <Heart className="w-8 h-8 md:w-12 md:h-12" />
           </motion.div>
-        );
-      })}
+        ));
+
+      case "birthday":
+        return Array(12).fill().map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              opacity: 0 
+            }}
+            animate={{
+              x: [
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth
+              ],
+              y: [
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerHeight
+              ],
+              opacity: [0.2, 0.5, 0.2],
+              rotate: [0, 360]
+            }}
+            transition={{
+              duration: Math.random() * 10 + 15,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute"
+          >
+            {i % 4 === 0 ? (
+              <Cake className="w-8 h-8 md:w-12 md:h-12 text-purple-500/20" />
+            ) : i % 4 === 1 ? (
+              <BsBalloonFill className="w-8 h-8 md:w-12 md:h-12 text-yellow-500/20" />
+            ) : i % 4 === 2 ? (
+              <BsMusicNoteBeamed className="w-8 h-8 md:w-12 md:h-12 text-blue-500/20" />
+            ) : (
+              <Gift className="w-8 h-8 md:w-12 md:h-12 text-red-500/20" />
+            )}
+          </motion.div>
+        ));
+
+      case "wedding":
+        return Array(10).fill().map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              opacity: 0 
+            }}
+            animate={{
+              x: [
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth
+              ],
+              y: [
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerHeight
+              ],
+              opacity: [0.2, 0.4, 0.2],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{
+              duration: Math.random() * 10 + 20,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute"
+          >
+            {i % 3 === 0 ? (
+              <Gem className="w-8 h-8 md:w-12 md:h-12 text-yellow-500/20" />
+            ) : i % 3 === 1 ? (
+              <HeartHandshake className="w-8 h-8 md:w-12 md:h-12 text-blue-400/20" />
+            ) : (
+              <Heart className="w-8 h-8 md:w-12 md:h-12 text-purple-400/20" />
+            )}
+          </motion.div>
+        ));
+
+      case "graduation":
+        return Array(12).fill().map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              opacity: 0 
+            }}
+            animate={{
+              x: [
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth
+              ],
+              y: [
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerHeight
+              ],
+              opacity: [0.2, 0.5, 0.2],
+              rotate: [-30, 30, -30]
+            }}
+            transition={{
+              duration: Math.random() * 10 + 15,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute text-blue-500/20"
+          >
+            <GraduationCap className="w-8 h-8 md:w-12 md:h-12" />
+          </motion.div>
+        ));
+
+      case "baby shower":
+        return Array(10).fill().map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              opacity: 0 
+            }}
+            animate={{
+              x: [
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth
+              ],
+              y: [
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerHeight
+              ],
+              opacity: [0.2, 0.4, 0.2],
+              rotate: [0, i % 2 === 0 ? 360 : -360]
+            }}
+            transition={{
+              duration: Math.random() * 10 + 20,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute text-pink-300/20"
+          >
+            <BabyIcon className="w-8 h-8 md:w-12 md:h-12" />
+          </motion.div>
+        ));
+
+      case "house warming":
+        return Array(8).fill().map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              opacity: 0 
+            }}
+            animate={{
+              x: [
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth
+              ],
+              y: [
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerHeight
+              ],
+              opacity: [0.2, 0.4, 0.2],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{
+              duration: Math.random() * 10 + 15,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute text-green-500/20"
+          >
+            <Home className="w-8 h-8 md:w-12 md:h-12" />
+          </motion.div>
+        ));
+
+      case "christmas":
+        return Array(12).fill().map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              opacity: 0 
+            }}
+            animate={{
+              x: [
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth
+              ],
+              y: [
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerHeight
+              ],
+              opacity: [0.2, 0.5, 0.2],
+              rotate: [0, i % 2 === 0 ? 360 : -360]
+            }}
+            transition={{
+              duration: Math.random() * 10 + 20,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute text-green-600/20"
+          >
+            <TreePine className="w-8 h-8 md:w-12 md:h-12" />
+          </motion.div>
+        ));
+
+      default:
+        return Array(8).fill().map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              opacity: 0 
+            }}
+            animate={{
+              x: [
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth
+              ],
+              y: [
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerHeight
+              ],
+              opacity: [0.2, 0.4, 0.2]
+            }}
+            transition={{
+              duration: Math.random() * 10 + 15,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute text-gray-400/20"
+          >
+            {i % 2 === 0 ? (
+              <Gift className="w-8 h-8 md:w-12 md:h-12" />
+            ) : (
+              <BsGiftFill className="w-8 h-8 md:w-12 md:h-12" />
+            )}
+          </motion.div>
+        ));
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 pointer-events-none">
+      {getEventIcons()}
     </div>
   );
 };
@@ -360,8 +598,11 @@ export default function AddItemsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Add Valentine's Hearts if it's a Valentine's Day wishlist */}
+    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+      {/* Add the FloatingEventIcons component right after the opening div */}
+      <FloatingEventIcons eventType={wishlist?.eventType} />
+
+      {/* Add Valentine's Hearts Component */}
       {isValentinesDay && <ValentineHearts />}
 
       {/* Even Wilder Search Bar Design */}
@@ -751,11 +992,20 @@ export default function AddItemsPage() {
                     setShowCart(false)
                     navigate(`/wishlist/${id}`)
                   }}
+                  disabled={!wishlist?.items?.length}
                   className="w-full mt-6 px-6 py-3 bg-[#970058] text-white rounded-xl 
-                           hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2"
+                           hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2
+                           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#970058]
+                           relative group"
                 >
                   <ShoppingBag className="w-5 h-5" />
                   View Wishlist
+                  {!wishlist?.items?.length && (
+                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 bg-gray-900 text-white text-xs
+                                  rounded-lg py-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Add at least one item to continue
+                    </div>
+                  )}
                 </button>
               </div>
             </motion.div>
@@ -890,11 +1140,20 @@ export default function AddItemsPage() {
 
           <button
               onClick={() => navigate(`/wishlist/${id}`)}
+              disabled={!wishlist?.items?.length}
               className="w-full mt-6 px-6 py-3 bg-[#970058] text-white rounded-xl 
-                       hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2"
+                       hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2
+                       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#970058]
+                       relative group"
             >
               <ShoppingBag className="w-5 h-5" />
               View Wishlist
+              {!wishlist?.items?.length && (
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 bg-gray-900 text-white text-xs
+                              rounded-lg py-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Add at least one item to continue
+                </div>
+              )}
           </button>
           </div>
         </div>
