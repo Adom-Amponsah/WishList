@@ -6,6 +6,7 @@ import { PaystackButton } from 'react-paystack';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountdownTimer from '../components/CountdownTimer';
+import SEO from './SEO';
 
 export default function SharedWishlist() {
   const { shareId } = useParams();
@@ -196,6 +197,16 @@ export default function SharedWishlist() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {wishlist && (
+        <SEO
+          title={`${wishlist.name} - ${wishlist.eventType} Wishlist`}
+          description={`Help make ${wishlist.userData?.name || 'someone'}'s ${wishlist.eventType} special! View and contribute to their wishlist of ${wishlist.items.length} items.`}
+          keywords={`wishlist, ${wishlist.eventType}, gifts, ${wishlist.items.slice(0, 5).map(item => item.title.split(' ')[0]).join(', ')}`}
+          url={window.location.href}
+          type="product.group"
+          image={wishlist.items[0]?.image_url || '/images/Logo_Purple.png'}
+        />
+      )}
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-gray-800 via-gray-700 to-gray-600 text-white overflow-hidden">
         {/* Animated background elements */}

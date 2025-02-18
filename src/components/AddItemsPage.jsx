@@ -276,13 +276,19 @@ export default function AddItemsPage() {
       setProducts(result.products)
 
       if (result.products.length === 0) {
-        toast.info('No products found for your search')
+        toast('No products found for your search', {
+          icon: 'ℹ️'
+        })
       } else {
         toast.success(`Found ${result.products.length} items`)
       }
     } catch (error) {
       console.error('Search error:', error)
-      toast.error('Failed to search products')
+      if (error.message?.includes('Failed to fetch')) {
+        toast.error('Connection error. Please check your internet connection and try again.')
+      } else {
+        toast.error('Failed to search products. Please try again later.')
+      }
     } finally {
       setLoading(false)
     }
@@ -626,7 +632,7 @@ export default function AddItemsPage() {
                       </div>
                       <span className="text-xs md:text-sm font-medium line-clamp-2 text-center">
                         {category.name}
-                      </span>
+              </span>
                     </div>
                   </motion.button>
                 )
@@ -687,8 +693,8 @@ export default function AddItemsPage() {
                   <button onClick={() => setShowCart(false)} className="p-2 hover:bg-gray-100 rounded-full">
                     <X className="w-6 h-6" />
                   </button>
-                </div>
-                
+          </div>
+
                 {/* Cart Items Content */}
                 {wishlist?.items?.length === 0 ? (
                   <div className="flex flex-col items-center justify-center text-center py-8">
@@ -767,15 +773,15 @@ export default function AddItemsPage() {
                 {isValentinesDay && <Heart className="w-6 h-6 text-pink-500" />}
                 {selectedCategory || 'Discover Items'}
               </h2>
-            </div>
+          </div>
 
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
                 <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
                   isValentinesDay ? 'border-pink-500' : 'border-[#970058]'
                 }`}></div>
-              </div>
-            ) : (
+            </div>
+          ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {products.map((product) => (
                   <motion.div
@@ -790,24 +796,24 @@ export default function AddItemsPage() {
                         alt={product.title}
                         className="w-full h-full object-contain p-2"
                       />
-                      <button
-                        onClick={() => handleAddItem(product)}
-                        disabled={isItemInWishlist(product.id) || addingItems[product.id]}
+                    <button
+                      onClick={() => handleAddItem(product)}
+                      disabled={isItemInWishlist(product.id) || addingItems[product.id]}
                         className={`absolute bottom-4 right-4 p-2 rounded-full shadow-lg
-                          ${isItemInWishlist(product.id)
+                        ${isItemInWishlist(product.id)
                             ? 'bg-green-500'
                             : 'bg-[#970058]'
-                          }`}
-                      >
-                        {isItemInWishlist(product.id) ? (
+                        }`}
+                    >
+                      {isItemInWishlist(product.id) ? (
                           <Check className="w-5 h-5 text-white" />
-                        ) : addingItems[product.id] ? (
+                      ) : addingItems[product.id] ? (
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
+                      ) : (
                           <Plus className="w-5 h-5 text-white" />
-                        )}
-                      </button>
-                    </div>
+                      )}
+                    </button>
+                  </div>
                     <div className="p-4">
                       <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">
                         {product.title}
@@ -820,7 +826,7 @@ export default function AddItemsPage() {
                 ))}
               </div>
             )}
-          </div>
+                </div>
 
           {/* Added Items Section */}
           <div className="hidden md:block w-[350px] bg-white rounded-xl shadow-sm p-6">
@@ -829,15 +835,15 @@ export default function AddItemsPage() {
               <div className="flex items-center gap-2 text-[#970058]">
                 <ShoppingBag className="w-5 h-5" />
                 <span className="font-medium">{wishlist?.items?.length || 0}</span>
-              </div>
-            </div>
+        </div>
+      </div>
 
             {wishlist?.items?.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center py-8">
                 <ShoppingBag className="w-12 h-12 text-gray-400 mb-4" />
                 <p className="text-gray-600">No items added yet</p>
                 <p className="text-sm text-gray-500 mt-2">Click the + button on items to add them</p>
-              </div>
+        </div>
             ) : (
               <div className="space-y-4 max-h-[600px] overflow-y-auto">
                 {wishlist?.items.map((item) => (
@@ -847,24 +853,24 @@ export default function AddItemsPage() {
                       alt={item.title}
                       className="w-16 h-16 object-contain bg-white rounded-lg"
                     />
-                    <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
                         {item.title}
                       </h3>
                       <p className="text-[#970058] text-sm font-semibold mt-1">
                         ₵{item.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <button
-                          onClick={() => handleQuantityChange(item.id, -1)}
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      onClick={() => handleQuantityChange(item.id, -1)}
                           className="p-1 hover:bg-white rounded"
-                          disabled={item.quantity <= 1}
-                        >
+                      disabled={item.quantity <= 1}
+                    >
                           <Minus className="w-3 h-3" />
-                        </button>
+                    </button>
                         <span className="text-sm w-6 text-center">{item.quantity}</span>
-                        <button
-                          onClick={() => handleQuantityChange(item.id, 1)}
+                    <button
+                      onClick={() => handleQuantityChange(item.id, 1)}
                           className="p-1 hover:bg-white rounded"
                         >
                           <Plus className="w-3 h-3" />
@@ -874,22 +880,22 @@ export default function AddItemsPage() {
                           className="ml-auto p-1 text-red-500 hover:bg-white rounded"
                         >
                           <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
+                    </button>
+                  </div>
+                </div>
                   </div>
                 ))}
-              </div>
-            )}
+            </div>
+          )}
 
-            <button
+          <button
               onClick={() => navigate(`/wishlist/${id}`)}
               className="w-full mt-6 px-6 py-3 bg-[#970058] text-white rounded-xl 
                        hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2"
             >
               <ShoppingBag className="w-5 h-5" />
               View Wishlist
-            </button>
+          </button>
           </div>
         </div>
       </div>

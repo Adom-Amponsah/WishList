@@ -11,6 +11,7 @@ import NotFound from './components/NotFound'
 import UserAuth from './components/UserAuth'
 import { getUsername } from './services/wishlistService'
 import './App.css'
+import { HelmetProvider } from 'react-helmet-async'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -25,58 +26,60 @@ const ProtectedRoute = ({ children }) => {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          success: {
-            duration: 3000,
-            style: {
-              background: '#10B981',
-              color: 'white',
+    <HelmetProvider>
+      <BrowserRouter>
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            success: {
+              duration: 3000,
+              style: {
+                background: '#10B981',
+                color: 'white',
+              },
             },
-          },
-          error: {
-            duration: 3000,
-            style: {
-              background: '#EF4444',
-              color: 'white',
+            error: {
+              duration: 3000,
+              style: {
+                background: '#EF4444',
+                color: 'white',
+              },
             },
-          },
-        }}
-      />
+          }}
+        />
 
-      <Routes>
-        <Route path="/" element={<HeroSection />} />
-        <Route path="/auth" element={<UserAuth />} />
-        <Route path="/my-wishlists" element={
-          <ProtectedRoute>
-            <MyWishlists />
-          </ProtectedRoute>
-        } />
-        <Route path="/events" element={
-          <ProtectedRoute>
-            <EventSelection />
-          </ProtectedRoute>
-        } />
-        <Route path="/create/:eventType" element={
-          <ProtectedRoute>
-            <WishlistCreator />
-          </ProtectedRoute>
-        } />
-        <Route path="/wishlist/:id" element={
-          <ProtectedRoute>
-            <WishlistDetails />
-          </ProtectedRoute>
-        } />
-        <Route path="/wishlist/:id/add-items" element={
-          <ProtectedRoute>
-            <AddItemsPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/share/:shareId" element={<SharedWishlist />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HeroSection />} />
+          <Route path="/auth" element={<UserAuth />} />
+          <Route path="/my-wishlists" element={
+            <ProtectedRoute>
+              <MyWishlists />
+            </ProtectedRoute>
+          } />
+          <Route path="/events" element={
+            <ProtectedRoute>
+              <EventSelection />
+            </ProtectedRoute>
+          } />
+          <Route path="/create/:eventType" element={
+            <ProtectedRoute>
+              <WishlistCreator />
+            </ProtectedRoute>
+          } />
+          <Route path="/wishlist/:id" element={
+            <ProtectedRoute>
+              <WishlistDetails />
+            </ProtectedRoute>
+          } />
+          <Route path="/wishlist/:id/add-items" element={
+            <ProtectedRoute>
+              <AddItemsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/share/:shareId" element={<SharedWishlist />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </HelmetProvider>
   )
 }

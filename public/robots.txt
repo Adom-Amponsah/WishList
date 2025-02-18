@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /events
+Allow: /create/*
+Allow: /share/*
+
+Disallow: /my-wishlists
+Disallow: /wishlist/*/add-items
+Disallow: /api/*
+
+Sitemap: https://nokonice.com/sitemap.xml 
