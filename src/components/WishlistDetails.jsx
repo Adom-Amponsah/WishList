@@ -4,7 +4,7 @@ import { getWishlistById, removeItemFromWishlist, deleteWishlist, updateWishlist
 import { getUserDetails, updateUserDetails, getStoredUser, logoutUser } from '../services/userService'
 import { encodeWishlistToURL } from '../utils/wishlistUrlUtils'
 import toast from 'react-hot-toast'
-import { FiCalendar, FiGift, FiShare2, FiExternalLink, FiTrash2, FiX, FiLink, FiEdit2, FiPlus, FiMinus, FiCheck, FiLogOut } from 'react-icons/fi'
+import { FiCalendar, FiGift, FiShare2, FiExternalLink, FiTrash2, FiX, FiLink, FiEdit2, FiPlus, FiMinus, FiCheck, FiLogOut, FiMail, FiPhone, FiHome, FiArrowRight, FiList } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 
@@ -22,6 +22,7 @@ export default function WishlistDetails() {
   const [wishlist, setWishlist] = useState(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showUserForm, setShowUserForm] = useState(false)
+  const [showDataForm, setShowDataForm] = useState(false)
   const [userDetails, setUserDetails] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [shareableLink, setShareableLink] = useState('')
@@ -266,6 +267,18 @@ export default function WishlistDetails() {
 
         {/* Content Overlay */}
         <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/30 via-black/20 to-black/30">
+          {/* Add My Wishlists button to top-left */}
+          <div className="absolute top-4 left-4 z-20">
+            <button
+              onClick={() => navigate('/my-wishlists')}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl 
+                       transition-colors flex items-center justify-center gap-2 backdrop-blur-sm"
+            >
+              <FiList className="w-5 h-5" />
+              <span className="text-sm">My Wishlists</span>
+            </button>
+          </div>
+
           {/* Add logout button to top-right */}
           <div className="absolute top-4 right-4 z-20">
             <button
@@ -499,157 +512,283 @@ export default function WishlistDetails() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => !shareableLink && setShowUserForm(false)}
+          onClick={() => !shareableLink && setShowUserForm(false)}
         >
           <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl"
-              onClick={e => e.stopPropagation()}
-            >
-              {!shareableLink ? (
-                <>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">Share Your Wishlist</h3>
-                    <button
-                      onClick={() => setShowUserForm(false)}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            {!shareableLink ? (
+              <>
+                <AnimatePresence mode="wait">
+                  {!showDataForm ? (
+                    <motion.div
+                      key="info-screen"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
                     >
-                      <FiX className="w-5 h-5" />
-                    </button>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-bold text-gray-900">Before We Share Your Wishlist</h3>
+                        <button
+                          onClick={() => setShowUserForm(false)}
+                          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                          <FiX className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      <motion.div 
+                        className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-6"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        <motion.h4 
+                          className="text-lg font-semibold text-blue-800 mb-4"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          We Will Need Your Information
+                        </motion.h4>
+                        <motion.ul 
+                          className="text-base text-blue-700 space-y-4"
+                          initial="hidden"
+                          animate="visible"
+                          variants={{
+                            visible: {
+                              transition: {
+                                staggerChildren: 0.1
+                              }
+                            }
+                          }}
+                        >
+                          <motion.li 
+                            className="flex items-start gap-3"
+                            variants={{
+                              hidden: { opacity: 0, x: -20 },
+                              visible: { opacity: 1, x: 0 }
+                            }}
+                          >
+                            <span className="text-blue-500 mt-1">•</span>
+                            To help gift-givers identify who they're buying for
+                          </motion.li>
+                          <motion.li 
+                            className="flex items-start gap-3"
+                            variants={{
+                              hidden: { opacity: 0, x: -20 },
+                              visible: { opacity: 1, x: 0 }
+                            }}
+                          >
+                            <span className="text-blue-500 mt-1">•</span>
+                            To ensure gifts are delivered to the correct address
+                          </motion.li>
+                          <motion.li 
+                            className="flex items-start gap-3"
+                            variants={{
+                              hidden: { opacity: 0, x: -20 },
+                              visible: { opacity: 1, x: 0 }
+                            }}
+                          >
+                            <span className="text-blue-500 mt-1">•</span>
+                            To notify you when someone contributes to your wishlist
+                          </motion.li>
+                        </motion.ul>
+                        <motion.p 
+                          className="text-sm text-blue-600 mt-6 border-t border-blue-100 pt-4"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.6 }}
+                        >
+                          Your information is secure and will only be shared with confirmed gift-givers.
+                        </motion.p>
+                      </motion.div>
+
+                      <motion.button
+                        onClick={() => setShowDataForm(true)}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.7 }}
+                        className="w-full px-6 py-3 bg-[#970058] text-white rounded-xl font-medium
+                                 hover:bg-[#C21878] transition-colors flex items-center justify-center gap-2"
+                      >
+                        Continue to Details
+                        <FiArrowRight className="w-5 h-5" />
+                      </motion.button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="form-screen"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                    >
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-bold text-gray-900">Enter Your Details</h3>
+                        <button
+                          onClick={() => setShowUserForm(false)}
+                          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                          <FiX className="w-5 h-5" />
+                        </button>
+                      </div>
+                
+                      <form onSubmit={handleUserDataSubmit} className="space-y-4">
+                        <div>
+                          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                            Full Name
+                          </label>
+                          <input
+                            id="name"
+                            ref={nameRef}
+                            type="text"
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter your full name"
+                          />
+                        </div>
+
+                        <div>
+                          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                            Email Address
+                          </label>
+                          <div className="relative">
+                            <input
+                              id="email"
+                              ref={emailRef}
+                              type="email"
+                              required
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Enter your email"
+                            />
+                            <FiMail className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                            Phone Number
+                          </label>
+                          <div className="relative">
+                            <input
+                              id="phone"
+                              ref={phoneRef}
+                              type="tel"
+                              required
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Enter your phone number"
+                            />
+                            <FiPhone className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-1">
+                            Date of Birth
+                          </label>
+                          <input
+                            id="dob"
+                            ref={dobRef}
+                            type="date"
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+
+                        <div>
+                          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                            Delivery Address
+                          </label>
+                          <div className="relative">
+                            <textarea
+                              id="location"
+                              ref={locationRef}
+                              required
+                              rows="2"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Enter your full delivery address"
+                            ></textarea>
+                            <FiHome className="absolute right-3 top-3 text-gray-400 w-5 h-5" />
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-4">
+                          <button
+                            type="button"
+                            onClick={() => setShowDataForm(false)}
+                            className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors"
+                          >
+                            Back
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="flex-1 px-6 py-3 bg-[#970058] text-white rounded-xl font-medium
+                                     hover:bg-[#C21878] transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+                                     flex items-center justify-center gap-2"
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <span>Updating...</span>
+                              </>
+                            ) : (
+                              <>
+                                <FiShare2 className="w-5 h-5" />
+                                <span>Share Wishlist</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FiLink className="w-8 h-8 text-green-500" />
                   </div>
-                  
-                  <p className="text-gray-600 mb-6">
-                    Please provide your contact details for potential buyers.
-                  </p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Your Wishlist is Ready to Share!</h3>
+                  <p className="text-gray-600">Copy the link below to share your wishlist with friends and family.</p>
+                </div>
 
-                  <form onSubmit={handleUserDataSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <input
-                  ref={nameRef}
-                  type="text"
-                  defaultValue={userDetails?.name || ''}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  ref={emailRef}
-                  type="email"
-                  defaultValue={userDetails?.email || ''}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone
-                </label>
-                <input
-                  ref={phoneRef}
-                  type="tel"
-                  defaultValue={userDetails?.phone || ''}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date of Birth
-                </label>
-                <input
-                  ref={dobRef}
-                  type="date"
-                  defaultValue={userDetails?.dateOfBirth || ''}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Location
-                </label>
-                <input
-                  ref={locationRef}
-                  type="text"
-                  defaultValue={userDetails?.location || ''}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
+                <div className="flex gap-2 mb-6">
+                  <input
+                    type="text"
+                    readOnly
+                    value={shareableLink}
+                    className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600"
+                    onClick={(e) => e.target.select()}
+                  />
+                  <button
+                    onClick={handleShare}
+                    className="px-4 py-2 bg-[#970058] text-white rounded-lg hover:bg-[#C21878] transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
 
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                      className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl font-medium
-                               hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed
-                               flex items-center justify-center gap-2"
+                  onClick={() => {
+                    setShowUserForm(false)
+                    setShareableLink('')
+                  }}
+                  className="w-full px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
                 >
-                  {isSubmitting ? (
-                    <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Updating...
-                    </>
-                  ) : (
-                        <>
-                          <FiShare2 className="w-5 h-5" />
-                          Share Wishlist
-                        </>
-                  )}
+                  Close
                 </button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FiLink className="w-8 h-8 text-green-500" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Your Wishlist is Ready to Share!</h3>
-                    <p className="text-gray-600">Copy the link below to share your wishlist with friends and family.</p>
-                  </div>
-
-                  <div className="flex gap-2 mb-6">
-                    <input
-                      type="text"
-                      readOnly
-                      value={shareableLink}
-                      className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600"
-                      onClick={(e) => e.target.select()}
-                    />
-                    <button
-                      onClick={handleShare}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                    >
-                      Copy
-                    </button>
-              </div>
-
-                  <button
-                    onClick={() => {
-                      setShowUserForm(false)
-                      setShareableLink('')
-                    }}
-                    className="w-full px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                  >
-                    Close
-                  </button>
-                </>
-              )}
+              </>
+            )}
           </motion.div>
         </motion.div>
       )}
