@@ -42,6 +42,7 @@ import {
 } from 'lucide-react'
 import { FiGift, FiHeart } from 'react-icons/fi'
 import { BsGiftFill, BsMusicNoteBeamed, BsStarFill, BsBalloonFill } from 'react-icons/bs'
+import ItemDetailModal from './ItemDetailModal'
 
 // Event-specific floating icons component
 const FloatingEventIcons = ({ eventType }) => {
@@ -347,6 +348,8 @@ export default function AddItemsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [addingItems, setAddingItems] = useState({})
   const [isValentinesDay, setIsValentinesDay] = useState(false)
+  const [selectedItem, setSelectedItem] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Fetch wishlist data
   useEffect(() => {
@@ -596,6 +599,18 @@ export default function AddItemsPage() {
       toast.error(error.message || 'Failed to update item quantity')
     }
   }
+
+  // Function to open the modal with the selected item
+  const openModal = (item) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
+  // Function to close the modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedItem(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 relative overflow-hidden">
@@ -1038,7 +1053,8 @@ export default function AddItemsPage() {
                     key={product.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-xl shadow-sm overflow-hidden"
+                    className="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer"
+                    onClick={() => openModal(product)}
                   >
                     <div className="aspect-square bg-gray-50 relative overflow-hidden">
                       <img
@@ -1047,13 +1063,16 @@ export default function AddItemsPage() {
                         className="w-full h-full object-contain p-2"
                       />
                     <button
-                      onClick={() => handleAddItem(product)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddItem(product);
+                      }}
                       disabled={isItemInWishlist(product.id) || addingItems[product.id]}
-                        className={`absolute bottom-4 right-4 p-2 rounded-full shadow-lg
-                        ${isItemInWishlist(product.id)
-                            ? 'bg-green-500'
-                            : 'bg-[#970058]'
-                        }`}
+                      className={`absolute bottom-4 right-4 p-2 rounded-full shadow-lg
+                      ${isItemInWishlist(product.id)
+                          ? 'bg-green-500'
+                          : 'bg-[#970058]'
+                      }`}
                     >
                       {isItemInWishlist(product.id) ? (
                           <Check className="w-5 h-5 text-white" />
@@ -1158,6 +1177,11 @@ export default function AddItemsPage() {
           </div>
         </div>
       </div>
+
+      {/* Render the modal if it's open */}
+      {isModalOpen && (
+        <ItemDetailModal item={selectedItem} onClose={closeModal} />
+      )}
     </div>
   )
 } 
