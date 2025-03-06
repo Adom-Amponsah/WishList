@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountdownTimer from '../components/CountdownTimer';
 import SEO from './SEO';
+import { sendContributionNotification } from '../services/emailService';
 
 export default function SharedWishlist() {
   const { shareId } = useParams();
@@ -102,6 +103,19 @@ export default function SharedWishlist() {
         const updatedWishlist = await getSharedWishlist(shareId);
         if (updatedWishlist) {
           setWishlist(updatedWishlist);
+          
+          // Send email notification
+          try {
+            await sendContributionNotification(
+              wishlist.userData, 
+              contributionData,
+              item
+            );
+          } catch (emailError) {
+            console.error('Failed to send email notification:', emailError);
+            // Don't throw the error as the contribution was successful
+          }
+
           toast.success(
             isFullGift 
               ? `Successfully gifted ${item.title}!` 
