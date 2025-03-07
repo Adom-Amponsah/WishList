@@ -38,11 +38,14 @@ import {
   Gem,
   Baby as BabyIcon,
   Home,
-  TreePine
+  TreePine,
+  ArrowDown
 } from 'lucide-react'
 import { FiGift, FiHeart } from 'react-icons/fi'
 import { BsGiftFill, BsMusicNoteBeamed, BsStarFill, BsBalloonFill } from 'react-icons/bs'
 import ItemDetailModal from './ItemDetailModal'
+import AddCustomItemModal from './AddCustomItemModal'
+import OnboardingTutorial from './OnboardingTutorial'
 
 // Event-specific floating icons component
 const FloatingEventIcons = ({ eventType }) => {
@@ -350,6 +353,13 @@ export default function AddItemsPage() {
   const [isValentinesDay, setIsValentinesDay] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showCustomItemModal, setShowCustomItemModal] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(() => {
+    // Check if this is the first visit
+    const tutorialShown = localStorage.getItem('tutorialShown');
+    // Show tutorial if tutorialShown is null (first visit)
+    return !tutorialShown;
+  });
 
   // Fetch wishlist data
   useEffect(() => {
@@ -612,8 +622,32 @@ export default function AddItemsPage() {
     setSelectedItem(null);
   };
 
+  // Add this function to handle adding custom items
+  const handleAddCustomItem = async (customItem) => {
+    try {
+      await handleAddItem(customItem);
+    } catch (error) {
+      console.error('Error adding custom item:', error);
+      throw error;
+    }
+  };
+
+  // Update the handleTutorialComplete
+  const handleTutorialComplete = () => {
+    console.log('Tutorial complete called');
+    setShowTutorial(false);
+    localStorage.setItem('tutorialShown', 'true');
+  };
+
+  // Add a useEffect to monitor showTutorial changes
+  useEffect(() => {
+    console.log('showTutorial state changed:', showTutorial);
+  }, [showTutorial]);
+
   return (
     <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+      {console.log('Rendering AddItemsPage, showTutorial:', showTutorial)}
+
       {/* Add the FloatingEventIcons component right after the opening div */}
       <FloatingEventIcons eventType={wishlist?.eventType} />
 
@@ -1038,64 +1072,78 @@ export default function AddItemsPage() {
                 {isValentinesDay && <Heart className="w-6 h-6 text-pink-500" />}
                 {selectedCategory || 'Discover Items'}
               </h2>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-                <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
-                  isValentinesDay ? 'border-pink-500' : 'border-[#970058]'
-                }`}></div>
+              
+              {/* Add Custom Item Button */}
+              <button
+                onClick={() => {
+                  console.log('Add Custom Item clicked');
+                  setShowCustomItemModal(true);
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white
+                            ${isValentinesDay ? 'bg-pink-500 hover:bg-pink-600' : 'bg-[#970058] hover:bg-[#C21878]'}
+                            transition-all transform hover:scale-105`}
+              >
+                <Plus className="w-5 h-5" />
+                <span className="text-sm font-medium">Add Custom Item</span>
+              </button>
             </div>
-          ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {products.map((product) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer"
-                    onClick={() => openModal(product)}
-                  >
-                    <div className="aspect-square bg-gray-50 relative overflow-hidden">
-                      <img
-                        src={product.image_url}
-                        alt={product.title}
-                        className="w-full h-full object-contain p-2"
-                      />
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddItem(product);
-                      }}
-                      disabled={isItemInWishlist(product.id) || addingItems[product.id]}
-                      className={`absolute bottom-4 right-4 p-2 rounded-full shadow-lg
-                      ${isItemInWishlist(product.id)
-                          ? 'bg-green-500'
-                          : 'bg-[#970058]'
-                      }`}
-                    >
-                      {isItemInWishlist(product.id) ? (
-                          <Check className="w-5 h-5 text-white" />
-                      ) : addingItems[product.id] ? (
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                          <Plus className="w-5 h-5 text-white" />
-                      )}
-                    </button>
-                  </div>
-                    <div className="p-4">
-                      <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">
-                        {product.title}
-                      </h3>
-                      <p className="text-[#970058] font-semibold">
-                        ₵{product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
+
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                  <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
+                    isValentinesDay ? 'border-pink-500' : 'border-[#970058]'
+                  }`}></div>
               </div>
-            )}
+            ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {products.map((product) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer"
+                      onClick={() => openModal(product)}
+                    >
+                      <div className="aspect-square bg-gray-50 relative overflow-hidden">
+                        <img
+                          src={product.image_url}
+                          alt={product.title}
+                          className="w-full h-full object-contain p-2"
+                        />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddItem(product);
+                        }}
+                        disabled={isItemInWishlist(product.id) || addingItems[product.id]}
+                        className={`absolute bottom-4 right-4 p-2 rounded-full shadow-lg
+                        ${isItemInWishlist(product.id)
+                            ? 'bg-green-500'
+                            : 'bg-[#970058]'
+                        }`}
+                      >
+                        {isItemInWishlist(product.id) ? (
+                            <Check className="w-5 h-5 text-white" />
+                        ) : addingItems[product.id] ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Plus className="w-5 h-5 text-white" />
+                        )}
+                      </button>
+                    </div>
+                      <div className="p-4">
+                        <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">
+                          {product.title}
+                        </h3>
+                        <p className="text-[#970058] font-semibold">
+                          ₵{product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
+              )}
+          </div>
 
           {/* Added Items Section */}
           <div className="hidden md:block w-[350px] bg-white rounded-xl shadow-sm p-6">
@@ -1182,6 +1230,22 @@ export default function AddItemsPage() {
       {isModalOpen && (
         <ItemDetailModal item={selectedItem} onClose={closeModal} />
       )}
+
+      {/* Custom Item Modal */}
+      <AnimatePresence>
+        {showCustomItemModal && (
+          <AddCustomItemModal
+            onClose={() => setShowCustomItemModal(false)}
+            onAddItem={handleAddCustomItem}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Onboarding Tutorial */}
+      <OnboardingTutorial 
+        isVisible={showTutorial} 
+        onClose={handleTutorialComplete}
+      />
     </div>
   )
 } 

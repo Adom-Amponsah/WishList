@@ -4,9 +4,15 @@ import { getWishlistById, removeItemFromWishlist, deleteWishlist, updateWishlist
 import { getUserDetails, updateUserDetails, getStoredUser, logoutUser } from '../services/userService'
 import { encodeWishlistToURL } from '../utils/wishlistUrlUtils'
 import toast from 'react-hot-toast'
-import { FiCalendar, FiGift, FiShare2, FiExternalLink, FiTrash2, FiX, FiLink, FiEdit2, FiPlus, FiMinus, FiCheck, FiLogOut, FiMail, FiPhone, FiHome, FiArrowRight, FiList } from 'react-icons/fi'
+import { FiCalendar, FiGift, FiShare2, FiExternalLink, FiTrash2, FiX, FiLink, FiEdit2, FiPlus, FiMinus, FiCheck, FiLogOut, FiMail, FiPhone, FiHome, FiArrowRight, FiList, FiCopy, FiInstagram } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { 
+  WhatsappShareButton, WhatsappIcon,
+  TelegramShareButton, TelegramIcon,
+  TwitterShareButton,
+  FacebookShareButton, FacebookIcon
+} from 'react-share'
 
 export default function WishlistDetails() {
   const { id } = useParams()
@@ -759,23 +765,83 @@ export default function WishlistDetails() {
                     <FiLink className="w-8 h-8 text-green-500" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Your Wishlist is Ready to Share!</h3>
-                  <p className="text-gray-600">Copy the link below to share your wishlist with friends and family.</p>
+                  <p className="text-gray-600">Share your wishlist on your favorite platform</p>
                 </div>
 
-                <div className="flex gap-2 mb-6">
-                  <input
-                    type="text"
-                    readOnly
-                    value={shareableLink}
-                    className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600"
-                    onClick={(e) => e.target.select()}
-                  />
-                  <button
-                    onClick={handleShare}
-                    className="px-4 py-2 bg-[#970058] text-white rounded-lg hover:bg-[#C21878] transition-colors"
+                {/* Social Share Buttons */}
+                <div className="flex justify-center gap-4 mb-6">
+                  <WhatsappShareButton url={shareableLink} title="Check out my wishlist!">
+                    <div className="flex flex-col items-center gap-1">
+                      <WhatsappIcon size={40} round />
+                      <span className="text-xs text-gray-600">WhatsApp</span>
+                    </div>
+                  </WhatsappShareButton>
+
+                  <TelegramShareButton url={shareableLink} title="Check out my wishlist!">
+                    <div className="flex flex-col items-center gap-1">
+                      <TelegramIcon size={40} round />
+                      <span className="text-xs text-gray-600">Telegram</span>
+                    </div>
+                  </TelegramShareButton>
+
+                  <TwitterShareButton url={shareableLink} title="Check out my wishlist!">
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
+                        <FiX className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs text-gray-600">X</span>
+                    </div>
+                  </TwitterShareButton>
+
+                  <FacebookShareButton url={shareableLink} quote="Check out my wishlist!">
+                    <div className="flex flex-col items-center gap-1">
+                      <FacebookIcon size={40} round />
+                      <span className="text-xs text-gray-600">Facebook</span>
+                    </div>
+                  </FacebookShareButton>
+
+                  {/* Add Instagram Button */}
+                  <button 
+                    onClick={() => {
+                      // Open Instagram app/web with pre-filled text
+                      const instagramUrl = `instagram://library?AssetPath=null&text=Check out my wishlist! ${shareableLink}`;
+                      window.location.href = instagramUrl;
+                      
+                      // Fallback for desktop or if Instagram app isn't installed
+                      setTimeout(() => {
+                        window.open('https://www.instagram.com', '_blank');
+                      }, 1000);
+                    }}
+                    className="flex flex-col items-center gap-1"
                   >
-                    Copy
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 
+                                    flex items-center justify-center">
+                      <FiInstagram className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-xs text-gray-600">Instagram</span>
                   </button>
+                </div>
+
+                {/* Copy Link Section */}
+                <div className="bg-gray-50 p-4 rounded-xl mb-6">
+                  <p className="text-sm text-gray-600 mb-2">Or copy the link manually:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={shareableLink}
+                      className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 text-sm"
+                      onClick={(e) => e.target.select()}
+                    />
+                    <button
+                      onClick={handleShare}
+                      className="px-4 py-2 bg-[#970058] text-white rounded-lg hover:bg-[#C21878] transition-colors
+                               flex items-center gap-2 text-sm"
+                    >
+                      <FiCopy className="w-4 h-4" />
+                      Copy
+                    </button>
+                  </div>
                 </div>
 
                 <button
