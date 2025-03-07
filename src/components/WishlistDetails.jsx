@@ -800,14 +800,11 @@ export default function WishlistDetails() {
                     </div>
                   </FacebookShareButton>
 
-                  {/* Add Instagram Button */}
+                  {/* Instagram Button */}
                   <button 
                     onClick={() => {
-                      // Open Instagram app/web with pre-filled text
                       const instagramUrl = `instagram://library?AssetPath=null&text=Check out my wishlist! ${shareableLink}`;
                       window.location.href = instagramUrl;
-                      
-                      // Fallback for desktop or if Instagram app isn't installed
                       setTimeout(() => {
                         window.open('https://www.instagram.com', '_blank');
                       }, 1000);

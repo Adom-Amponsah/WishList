@@ -1073,13 +1073,13 @@ export default function AddItemsPage() {
                 {selectedCategory || 'Discover Items'}
               </h2>
               
-              {/* Add Custom Item Button */}
+              {/* Add Custom Item Button - Only show on mobile */}
               <button
                 onClick={() => {
                   console.log('Add Custom Item clicked');
                   setShowCustomItemModal(true);
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white
+                className={`md:hidden flex items-center gap-2 px-4 py-2 rounded-xl text-white
                             ${isValentinesDay ? 'bg-pink-500 hover:bg-pink-600' : 'bg-[#970058] hover:bg-[#C21878]'}
                             transition-all transform hover:scale-105`}
               >
@@ -1143,6 +1143,42 @@ export default function AddItemsPage() {
                   ))}
                 </div>
               )}
+          </div>
+
+          {/* Floating Action Button - Only show on desktop/laptop */}
+          <div className="hidden md:block">
+            <motion.div
+              className="fixed right-[250px] bottom-8 z-50"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              {/* Tooltip */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white text-sm px-3 py-1.5 
+                           rounded-lg shadow-lg whitespace-nowrap"
+              >
+                Add Custom Item
+              </motion.div>
+
+              {/* FAB Button */}
+              <motion.button
+                onClick={() => {
+                  console.log('FAB clicked');
+                  setShowCustomItemModal(true);
+                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white
+                           ${isValentinesDay ? 'bg-pink-500 hover:bg-pink-600' : 'bg-[#970058] hover:bg-[#C21878]'}
+                           transition-colors transform`}
+              >
+                <Plus className="w-6 h-6" />
+              </motion.button>
+            </motion.div>
           </div>
 
           {/* Added Items Section */}

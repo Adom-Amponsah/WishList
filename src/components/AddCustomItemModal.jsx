@@ -241,7 +241,7 @@ const AddCustomItemModal = ({ onClose, onAddItem }) => {
               </div>
             </div>
 
-            {/* <div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Product URL (Optional)
               </label>
@@ -253,7 +253,7 @@ const AddCustomItemModal = ({ onClose, onAddItem }) => {
                          focus:ring-2 focus:ring-[#970058] focus:border-transparent"
                 placeholder="Where can this item be found?"
               />
-            </div> */}
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
