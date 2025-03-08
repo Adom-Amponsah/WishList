@@ -634,19 +634,19 @@ export default function AddItemsPage() {
 
   // Update the handleTutorialComplete
   const handleTutorialComplete = () => {
-    console.log('Tutorial complete called');
+    // console.log('Tutorial complete called');
     setShowTutorial(false);
     localStorage.setItem('tutorialShown', 'true');
   };
 
   // Add a useEffect to monitor showTutorial changes
   useEffect(() => {
-    console.log('showTutorial state changed:', showTutorial);
+    // console.log('showTutorial state changed:', showTutorial);
   }, [showTutorial]);
 
   return (
     <div className="min-h-screen bg-gray-50 relative overflow-hidden">
-      {console.log('Rendering AddItemsPage, showTutorial:', showTutorial)}
+      {/* {console.log('Rendering AddItemsPage, showTutorial:', showTutorial)} */}
 
       {/* Add the FloatingEventIcons component right after the opening div */}
       <FloatingEventIcons eventType={wishlist?.eventType} />
@@ -1076,7 +1076,7 @@ export default function AddItemsPage() {
               {/* Add Custom Item Button - Only show on mobile */}
               <button
                 onClick={() => {
-                  console.log('Add Custom Item clicked');
+                  // console.log('Add Custom Item clicked');
                   setShowCustomItemModal(true);
                 }}
                 className={`md:hidden flex items-center gap-2 px-4 py-2 rounded-xl text-white
@@ -1167,7 +1167,7 @@ export default function AddItemsPage() {
               {/* FAB Button */}
               <motion.button
                 onClick={() => {
-                  console.log('FAB clicked');
+                  // console.log('FAB clicked');
                   setShowCustomItemModal(true);
                 }}
                 whileHover={{ scale: 1.1 }}

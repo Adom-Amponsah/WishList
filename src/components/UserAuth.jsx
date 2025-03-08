@@ -224,7 +224,7 @@ export default function UserAuth() {
         const result = await signInWithPopup(auth, provider);
         await handleGoogleUserData(result.user);
       } catch (popupError) {
-        console.log('Popup error:', popupError);
+        // console.log('Popup error:', popupError);
         
         // Check specific error cases
         if (popupError.code === 'auth/popup-blocked') {
@@ -238,7 +238,7 @@ export default function UserAuth() {
           return;
         } else {
           // For other errors, try redirect
-          console.log('Trying redirect sign-in...');
+          // console.log('Trying redirect sign-in...');
           await signInWithRedirect(auth, provider);
         }
       }

@@ -95,7 +95,7 @@ export default function SharedWishlist() {
         }
       };
 
-      console.log('Saving contribution:', contributionData); // Debug log
+      // console.log('Saving contribution:', contributionData); // Debug log
 
       const success = await addContribution(shareId, item.id, contributionData);
       if (success) {

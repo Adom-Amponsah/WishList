@@ -25,21 +25,28 @@ const AddCustomItemModal = ({ onClose, onAddItem }) => {
         throw new Error('Title and price are required');
       }
 
-      // Validate and clean up the data before submission
+      // Clean and validate the data
       const customItem = {
         title: itemData.title.trim(),
         price: parseFloat(itemData.price),
-        image_url: itemData.image_url || '', // Ensure it's not undefined
-        product_url: itemData.product_url || '', // Ensure it's not undefined
-        details: itemData.details?.trim() || '', // Ensure it's not undefined
+        // Use a default image if no image is provided or if it's a base64 string
+        image_url: itemData.image_url?.startsWith('data:image') 
+          ? 'https://placehold.co/400x400?text=Custom+Item'
+          : (itemData.image_url || 'https://placehold.co/400x400?text=Custom+Item'),
+        product_url: itemData.product_url?.trim() || '',
+        details: itemData.details?.trim() || '',
         quantity: parseInt(itemData.quantity) || 1,
         id: `custom-${Date.now()}`,
         category: 'Custom',
-        isCustomItem: true // Add a flag to identify custom items
+        isCustomItem: true
       };
 
-      // Log the item being added
-      console.log('Adding custom item:', customItem);
+      // Remove any undefined or null values
+      Object.keys(customItem).forEach(key => {
+        if (customItem[key] === undefined || customItem[key] === null) {
+          delete customItem[key];
+        }
+      });
 
       await onAddItem(customItem);
       toast.success('Item added successfully!');

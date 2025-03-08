@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Package } from 'lucide-react';
 
 const OnboardingTutorial = ({ isVisible, onClose }) => {
-  console.log('OnboardingTutorial rendered with isVisible:', isVisible);
+//   console.log('OnboardingTutorial rendered with isVisible:', isVisible);
 
   if (!isVisible) {
-    console.log('Tutorial not visible, returning null');
+    // console.log('Tutorial not visible, returning null');
     return null;
   }
 
