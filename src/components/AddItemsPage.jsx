@@ -1148,7 +1148,7 @@ export default function AddItemsPage() {
           {/* Floating Action Button - Only show on desktop/laptop */}
           <div className="hidden md:block">
             <motion.div
-              className="fixed right-[250px] bottom-8 z-50"
+              className="fixed right-[470px] bottom-8 z-50"
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5 }}
@@ -1158,7 +1158,7 @@ export default function AddItemsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
-                className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white text-sm px-3 py-1.5 
+                className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 
                            rounded-lg shadow-lg whitespace-nowrap"
               >
                 Add Custom Item
@@ -1173,7 +1173,7 @@ export default function AddItemsPage() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white
-                           ${isValentinesDay ? 'bg-pink-500 hover:bg-pink-600' : 'bg-[#970058] hover:bg-[#C21878]'}
+                           ${isValentinesDay ? 'bg-pink-400 hover:bg-pink-500' : 'bg-[#FF1493] hover:bg-[#D27B9D]'}
                            transition-colors transform`}
               >
                 <Plus className="w-6 h-6" />
