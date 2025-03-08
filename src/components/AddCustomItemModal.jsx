@@ -3,6 +3,38 @@ import { motion } from 'framer-motion';
 import { X, Upload, Plus, Image as ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const MAX_IMAGE_SIZE = 800; // Maximum width/height in pixels
+
+const compressImage = (dataUrl) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+      
+      // Calculate new dimensions while maintaining aspect ratio
+      if (width > height && width > MAX_IMAGE_SIZE) {
+        height *= MAX_IMAGE_SIZE / width;
+        width = MAX_IMAGE_SIZE;
+      } else if (height > MAX_IMAGE_SIZE) {
+        width *= MAX_IMAGE_SIZE / height;
+        height = MAX_IMAGE_SIZE;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Compress as JPEG with reduced quality
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
+    };
+    img.src = dataUrl;
+  });
+};
+
 const AddCustomItemModal = ({ onClose, onAddItem }) => {
   const [itemData, setItemData] = useState({
     title: '',
@@ -29,10 +61,7 @@ const AddCustomItemModal = ({ onClose, onAddItem }) => {
       const customItem = {
         title: itemData.title.trim(),
         price: parseFloat(itemData.price),
-        // Use a default image if no image is provided or if it's a base64 string
-        image_url: itemData.image_url?.startsWith('data:image') 
-          ? 'https://placehold.co/400x400?text=Custom+Item'
-          : (itemData.image_url || 'https://placehold.co/400x400?text=Custom+Item'),
+        image_url: itemData.image_url || 'https://placehold.co/400x400?text=Custom+Item',
         product_url: itemData.product_url?.trim() || '',
         details: itemData.details?.trim() || '',
         quantity: parseInt(itemData.quantity) || 1,
@@ -59,7 +88,7 @@ const AddCustomItemModal = ({ onClose, onAddItem }) => {
     }
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5000000) { // 5MB limit
@@ -68,10 +97,12 @@ const AddCustomItemModal = ({ onClose, onAddItem }) => {
       }
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const dataUrl = e.target.result;
-        setImagePreview(dataUrl);
-        setItemData(prev => ({ ...prev, image_url: dataUrl }));
+        // Compress the image before preview and storage
+        const compressedImage = await compressImage(dataUrl);
+        setImagePreview(compressedImage);
+        setItemData(prev => ({ ...prev, image_url: compressedImage }));
       };
       reader.readAsDataURL(file);
     }
@@ -81,17 +112,19 @@ const AddCustomItemModal = ({ onClose, onAddItem }) => {
     fileInputRef.current?.click();
   };
 
-  const handlePaste = (e) => {
+  const handlePaste = async (e) => {
     const items = e.clipboardData?.items;
     if (items) {
       for (let i = 0; i < items.length; i++) {
         if (items[i].type.indexOf('image') !== -1) {
           const file = items[i].getAsFile();
           const reader = new FileReader();
-          reader.onload = (e) => {
+          reader.onload = async (e) => {
             const dataUrl = e.target.result;
-            setImagePreview(dataUrl);
-            setItemData(prev => ({ ...prev, image_url: dataUrl }));
+            // Compress pasted image
+            const compressedImage = await compressImage(dataUrl);
+            setImagePreview(compressedImage);
+            setItemData(prev => ({ ...prev, image_url: compressedImage }));
           };
           reader.readAsDataURL(file);
           break;

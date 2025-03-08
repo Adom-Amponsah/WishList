@@ -2,6 +2,9 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { getUsername } from '../services/wishlistService';
 import { FiUser, FiUserPlus } from 'react-icons/fi';
+import { FaInstagram, FaTiktok } from 'react-icons/fa';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -155,6 +158,24 @@ const HeroSection = () => {
               )}
             </button>
           </motion.div>
+
+          {/* Follow Us Section */}
+          <div className="flex flex-col items-center bg-white/10 p-6 rounded-lg shadow-lg mt-8">
+            {/* <p className="text-lg text-white font-semibold mb-4">Join the Adventure!</p> */}
+            <p className="text-sm text-white mb-6">Follow us on:</p>
+            <div className="flex space-x-6">
+              <a href="https://www.tiktok.com/@usenokonice" target="_blank" rel="noopener noreferrer">
+                <FaTiktok className="text-3xl text-white hover:text-blue-400 transition duration-300 transform hover:scale-110" />
+              </a>
+              <a href="https://www.instagram.com/usenokonice/" target="_blank" rel="noopener noreferrer">
+                <FaInstagram className="text-3xl text-white hover:text-blue-400 transition duration-300 transform hover:scale-110" />
+              </a>
+              <a href="https://x.com/usenokonice" target="_blank" rel="noopener noreferrer">
+                <FontAwesomeIcon icon={faXTwitter} className="text-3xl text-white hover:text-blue-400 transition duration-300 transform hover:scale-110" />
+              </a>
+            </div>
+            <p className="text-xs text-white mt-4">Stay updated with our latest news and offers!</p>
+          </div>
         </div>
       </div>
     </div>
