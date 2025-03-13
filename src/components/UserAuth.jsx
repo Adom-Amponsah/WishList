@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiUser, FiArrowRight, FiUserPlus, FiLogIn, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiUser, FiArrowRight, FiUserPlus, FiLogIn, FiEye, FiEyeOff, FiMail } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 import { getStoredUser, createUser, verifyUser, checkUsernameExists, setStoredUser } from '../services/userService';
+import { sendWelcomeEmail } from '../services/emailService';
 import toast from 'react-hot-toast';
 import { 
   getAuth, 
@@ -21,6 +22,7 @@ import { db } from '../firebase/config';
 export default function UserAuth() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,17 +82,47 @@ export default function UserAuth() {
   const handleNewUser = async (e) => {
     e.preventDefault();
     
-    if (!username.trim() || !password.trim()) {
+    if (!username.trim() || !password.trim() || !email.trim()) {
       toast.error('Please fill in all fields');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error('Please enter a valid email address');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await createUser({
+      const userData = {
         username: username.trim(),
-        password: password.trim()
-      });
+        email: email.trim(),
+        password: password.trim(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        authProvider: 'email',
+        hasCompletedDetails: false
+      };
+
+      console.log('Creating new user with data:', userData);
+      const user = await createUser(userData);
+      console.log('User created successfully:', user);
+
+      // Send welcome email
+      try {
+        console.log('Attempting to send welcome email for user:', {
+          email: user.email,
+          username: user.username,
+          displayName: user.displayName
+        });
+        await sendWelcomeEmail(user);
+        console.log('Welcome email sent successfully');
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't block the signup process if email fails
+      }
 
       toast.success('Welcome to Nokonice!');
       navigate('/events');
@@ -178,6 +210,14 @@ export default function UserAuth() {
       try {
         userDoc = await createUser(userData);
         toast.dismiss('creating-account');
+
+        // Send welcome email for new Google users
+        try {
+          await sendWelcomeEmail(userDoc);
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+          // Don't block the signup process if email fails
+        }
       } catch (error) {
         toast.dismiss('creating-account');
         if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || error.name === 'FirebaseError') {
@@ -374,6 +414,26 @@ export default function UserAuth() {
                 placeholder={hasAccount ? 'Enter your username' : 'Choose a username'}
               />
             </div>
+
+            {!hasAccount && (
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent pl-12"
+                    placeholder="Enter your email address"
+                  />
+                  <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
+                </div>
+              </div>
+            )}
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">

@@ -44,13 +44,13 @@ export const createUser = async (userData) => {
     // Create user document based on auth type
     const userDoc = {
       username: userData.username.toLowerCase(),
+      email: userData.email,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
 
     // If it's a Google auth user, add Google-specific fields
     if (userData.authProvider === 'google') {
-      userDoc.email = userData.email;
       userDoc.displayName = userData.displayName;
       userDoc.photoURL = userData.photoURL;
       userDoc.authProvider = 'google';
@@ -58,6 +58,7 @@ export const createUser = async (userData) => {
     } else {
       // For regular username/password auth
       userDoc.password = userData.password; // In a real app, this should be hashed
+      userDoc.authProvider = 'email';
     }
 
     const docRef = await addDoc(collection(db, USERS_COLLECTION), userDoc);
