@@ -50,7 +50,7 @@ export const sendWelcomeEmail = async (user) => {
       to_email: user.email,
       reply_to: 'support@nokonice.com',
       app_name: 'Nokonice',
-      create_wishlist_link: `${window.location.origin}/events/new`,
+      create_wishlist_link: 'https://www.nokonice.com/',
       logo_url: 'https://res.cloudinary.com/daonkxbfz/image/upload/v1741894255/gllhbwth5roamqjhcbqs.png'
     };
 

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    /* Reset styles */
+    body, p {
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Main styles */
+    .email-container {
+      font-family: 'Arial', sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      line-height: 1.6;
+    }
+
+    /* Header styles */
+    .header {
+      background-color: #FF69B4;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header img {
+      max-width: 200px;
+      height: auto;
+    }
+
+    /* Content styles */
+    .content {
+      padding: 30px;
+      color: #333333;
+    }
+
+    .greeting {
+      font-size: 24px;
+      color: #FF69B4;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .message {
+      margin-bottom: 25px;
+      font-size: 16px;
+    }
+
+    /* Feature box styles */
+    .feature-box {
+      background-color: #FFF0F5;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .feature-title {
+      color: #FF69B4;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    /* Button styles */
+    .cta-button {
+      display: inline-block;
+      background-color: #FF69B4;
+      color: white;
+      padding: 15px 30px;
+      text-decoration: none;
+      border-radius: 25px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    /* Footer styles */
+    .footer {
+      background-color: #f8f8f8;
+      padding: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: #666666;
+    }
+
+    .social-links {
+      margin: 15px 0;
+    }
+
+    .social-links a {
+      color: #FF69B4;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <!-- Header with logo -->
+    <div class="header">
+      <img src="{{logo_url}}" alt="{{app_name}} Logo">
+    </div>
+
+    <!-- Main content -->
+    <div class="content">
+      <div class="greeting">
+        Hello {{to_name}}! 🎉
+      </div>
+
+      <div class="message">
+        We hope this email finds you well! We're excited to share some amazing updates from {{app_name}} that we think you'll love.
+      </div>
+
+      <!-- Feature Box: New Products -->
+      <div class="feature-box">
+        <div class="feature-title">✨ Exciting New Features!</div>
+        <p>
+          We've made it even easier to create and manage your wishlists:
+        </p>
+        <ul style="margin-top: 10px;">
+          <li>Create multiple wishlists for different occasions</li>
+          <li>Share your wishlist with friends and family</li>
+          <li>Track contributions and thank your contributors</li>
+          <li>Get notifications when someone contributes</li>
+        </ul>
+      </div>
+
+      <!-- Feature Box: Create Wishlist -->
+      <div class="feature-box">
+        <div class="feature-title">🎁 Create Your Perfect Wishlist Today!</div>
+        <p>
+          Whether it's for your birthday, wedding, or any special occasion, {{app_name}} makes it easy to:
+        </p>
+        <ul style="margin-top: 10px;">
+          <li>Add items from any online store</li>
+          <li>Set contribution goals</li>
+          <li>Customize your wishlist appearance</li>
+          <li>Receive group contributions</li>
+        </ul>
+      </div>
+
+      <!-- Call to Action -->
+      <div style="text-align: center;">
+        <p style="margin-bottom: 20px; font-size: 18px; font-weight: bold;">
+          Ready to start your wishlist?
+        </p>
+        <a href="{{create_wishlist_link}}" class="cta-button">
+          Create Your Wishlist Now
+        </a>
+      </div>
+
+      <!-- Additional Message -->
+      <div class="message" style="margin-top: 30px;">
+        Don't miss out on making your next celebration extra special. Create your wishlist today and share it with your loved ones!
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>With love from the {{app_name}} team 💝</p>
+      <div class="social-links">
+        Follow us on: 
+        <a href="https://www.tiktok.com/@usenokonice">TikTok</a> • 
+        <a href="https://www.instagram.com/usenokonice/">Instagram</a> • 
+        <a href="https://x.com/usenokonice">X (Twitter)</a>
+      </div>
+      <p style="margin-top: 15px;">
+        Questions? Email us at {{reply_to}}
+      </p>
+      <p style="margin-top: 15px; font-size: 12px;">
+        You're receiving this email because you're a valued member of {{app_name}}.
+        <br>
+        To unsubscribe, please <a href="#" style="color: #FF69B4;">click here</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html> 
