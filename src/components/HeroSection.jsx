@@ -5,6 +5,7 @@ import { FiUser, FiUserPlus } from 'react-icons/fi';
 import { FaInstagram, FaTiktok } from 'react-icons/fa';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
+import BusinessSection from './BusinessSection';
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -34,151 +35,153 @@ const HeroSection = () => {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black">
-      {/* Animated columns container */}
-      <div className="absolute inset-0 flex px-4 sm:px-6">
-        {columns.map((column, index) => (
-          <div key={index} className="flex-1 min-w-0 px-2 sm:px-4">
-            <motion.div
-              initial={{ y: index % 2 === 0 ? '0%' : '-100%' }}
-              animate={{ y: index % 2 === 0 ? '-100%' : '0%' }}
-              transition={{
-                duration: 20 + index * 2,
-                repeat: Infinity,
-                repeatType: 'reverse',
-                ease: 'linear',
-              }}
-              className="space-y-4 sm:space-y-6"
-            >
-              {[...column, ...column, ...column].map((img, imgIndex) => (
-                <div
-                  key={imgIndex}
-                  className="h-[30vh] sm:h-[40vh] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg"
+    <>
+      <div className="relative min-h-screen">
+        <div className="fixed inset-0 bg-black">
+          {/* Animated columns container */}
+          <div className="absolute inset-0 flex px-4 sm:px-6">
+            {columns.map((column, index) => (
+              <div key={index} className="flex-1 min-w-0 px-2 sm:px-4">
+                <motion.div
+                  initial={{ y: index % 2 === 0 ? '0%' : '-100%' }}
+                  animate={{ y: index % 2 === 0 ? '-100%' : '0%' }}
+                  transition={{
+                    duration: 20 + index * 2,
+                    repeat: Infinity,
+                    repeatType: 'reverse',
+                    ease: 'linear',
+                  }}
+                  className="space-y-4 sm:space-y-6"
                 >
-                  <img
-                    src={img}
-                    alt=""
-                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-              ))}
-            </motion.div>
+                  {[...column, ...column, ...column].map((img, imgIndex) => (
+                    <div
+                      key={imgIndex}
+                      className="h-[30vh] sm:h-[40vh] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg"
+                    >
+                      <img
+                        src={img}
+                        alt=""
+                        className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                  ))}
+                </motion.div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Overlay with content */}
-      <div className="fixed inset-0 z-10 bg-gradient-to-b from-black/70 via-black/50 to-black/70 
-                    flex items-center justify-center text-white">
-        
-        {/* Username status indicator */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="absolute top-4 right-4 flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full"
-        >
-          {username ? (
-            <>
-              <FiUser className="text-green-400" />
-              <span className="text-sm text-green-400">@{username}</span>
-            </>
-          ) : (
-            <>
-              <FiUserPlus className="text-yellow-400" />
-              <span className="text-sm text-yellow-400">No Account Set</span>
-            </>
-          )}
-        </motion.div>
-
-        {/* Main content container */}
-        <div className="max-w-3xl w-full mx-auto px-4 flex flex-col items-center justify-center space-y-12">
-          {/* Brand Logo and Text Animation */}
-          <motion.div
-            initial={{ opacity: 0, y: -100 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ 
-              type: "spring",
-              damping: 12,
-              stiffness: 100,
-              duration: 1.5
-            }}
-            className="flex flex-col items-center gap-6"
-          >
-            <img 
-              src="/images/LockUp_White.png" 
-              alt="Nokonice Logo"
-              className="w-full max-w-[300px] md:max-w-[400px] h-auto"
-            />
-            {/* <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold bg-clip-text text-transparent 
-                         bg-gradient-to-r from-white via-blue-200 to-white text-center">
-              Nokonice
-            </h1> */}
-          </motion.div>
-
-          {/* Description Animation */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ 
-              duration: 0.8,
-              delay: 1
-            }}
-            className="text-xl sm:text-2xl md:text-3xl text-blue-100 text-center leading-relaxed"
-          >
-            Get the gifts you actually want—create a wishlist, share it, and let others buy them for you!
-          </motion.p>
-
-          {/* Button Animation */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 1.5 }}
-            className="w-full flex justify-center"
-          >
-            <button
-              onClick={handleGetStarted}
-              className="bg-white/10 border-2 border-white/20 text-white 
-                     px-8 sm:px-10 py-4 sm:py-5 rounded-full text-lg sm:text-xl font-semibold
-                     hover:bg-white hover:text-black transition-all duration-300
-                     hover:border-transparent hover:scale-105 transform
-                     active:scale-95 shadow-lg shadow-black/20
-                     flex items-center gap-2"
+          {/* Overlay with content */}
+          <div className="fixed inset-0 z-10 bg-gradient-to-b from-black/70 via-black/50 to-black/70 
+                        flex items-center justify-center text-white">
+            
+            {/* Username status indicator */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="absolute top-4 right-4 flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full"
             >
               {username ? (
                 <>
-                  <FiUser className="w-5 h-5" />
-                  Sign In to Continue
+                  <FiUser className="text-green-400" />
+                  <span className="text-sm text-green-400">@{username}</span>
                 </>
               ) : (
                 <>
-                  <FiUserPlus className="w-5 h-5" />
-                  Get Started
+                  <FiUserPlus className="text-yellow-400" />
+                  <span className="text-sm text-yellow-400">No Account Set</span>
                 </>
               )}
-            </button>
-          </motion.div>
+            </motion.div>
 
-          {/* Follow Us Section */}
-          <div className="flex flex-col items-center bg-white/10 p-6 rounded-lg shadow-lg mt-8">
-            {/* <p className="text-lg text-white font-semibold mb-4">Join the Adventure!</p> */}
-            <p className="text-sm text-white mb-6">Follow us on:</p>
-            <div className="flex space-x-6">
-              <a href="https://www.tiktok.com/@usenokonice" target="_blank" rel="noopener noreferrer">
-                <FaTiktok className="text-3xl text-white hover:text-blue-400 transition duration-300 transform hover:scale-110" />
-              </a>
-              <a href="https://www.instagram.com/usenokonice/" target="_blank" rel="noopener noreferrer">
-                <FaInstagram className="text-3xl text-white hover:text-blue-400 transition duration-300 transform hover:scale-110" />
-              </a>
-              <a href="https://x.com/usenokonice" target="_blank" rel="noopener noreferrer">
-                <FontAwesomeIcon icon={faXTwitter} className="text-3xl text-white hover:text-blue-400 transition duration-300 transform hover:scale-110" />
-              </a>
+            {/* Main content container */}
+            <div className="max-w-3xl w-full mx-auto px-4 flex flex-col items-center justify-center space-y-12">
+              {/* Brand Logo and Text Animation */}
+              <motion.div
+                initial={{ opacity: 0, y: -100 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  type: "spring",
+                  damping: 12,
+                  stiffness: 100,
+                  duration: 1.5
+                }}
+                className="flex flex-col items-center gap-6"
+              >
+                <img 
+                  src="/images/LockUp_White.png" 
+                  alt="Nokonice Logo"
+                  className="w-full max-w-[300px] md:max-w-[400px] h-auto"
+                />
+              </motion.div>
+
+              {/* Description Animation */}
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.8,
+                  delay: 1
+                }}
+                className="text-xl sm:text-2xl md:text-3xl text-blue-100 text-center leading-relaxed"
+              >
+                Get the gifts you actually want—create a wishlist, share it, and let others buy them for you!
+              </motion.p>
+
+              {/* Button Animation */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 1.5 }}
+                className="w-full flex justify-center"
+              >
+                <button
+                  onClick={handleGetStarted}
+                  className="bg-white/10 border-2 border-white/20 text-white 
+                         px-8 sm:px-10 py-4 sm:py-5 rounded-full text-lg sm:text-xl font-semibold
+                         hover:bg-white hover:text-black transition-all duration-300
+                         hover:border-transparent hover:scale-105 transform
+                         active:scale-95 shadow-lg shadow-black/20
+                         flex items-center gap-2"
+                >
+                  {username ? (
+                    <>
+                      <FiUser className="w-5 h-5" />
+                      Sign In to Continue
+                    </>
+                  ) : (
+                    <>
+                      <FiUserPlus className="w-5 h-5" />
+                      Get Started
+                    </>
+                  )}
+                </button>
+              </motion.div>
+
+              {/* Follow Us Section */}
+              <div className="flex flex-col items-center bg-white/10 p-6 rounded-lg shadow-lg mt-8">
+                <p className="text-sm text-white mb-6">Follow us on:</p>
+                <div className="flex space-x-6">
+                  <a href="https://www.tiktok.com/@usenokonice" target="_blank" rel="noopener noreferrer">
+                    <FaTiktok className="text-3xl text-white hover:text-blue-400 transition duration-300 transform hover:scale-110" />
+                  </a>
+                  <a href="https://www.instagram.com/usenokonice/" target="_blank" rel="noopener noreferrer">
+                    <FaInstagram className="text-3xl text-white hover:text-blue-400 transition duration-300 transform hover:scale-110" />
+                  </a>
+                  <a href="https://x.com/usenokonice" target="_blank" rel="noopener noreferrer">
+                    <FontAwesomeIcon icon={faXTwitter} className="text-3xl text-white hover:text-blue-400 transition duration-300 transform hover:scale-110" />
+                  </a>
+                </div>
+                <p className="text-xs text-white mt-4">Stay updated with our latest news and offers!</p>
+              </div>
             </div>
-            <p className="text-xs text-white mt-4">Stay updated with our latest news and offers!</p>
           </div>
         </div>
       </div>
-    </div>
+      
+      {/* Business Section */}
+      <BusinessSection />
+    </>
   );
 }
 

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import BusinessSection from './components/BusinessSection'
 import HeroSection from './components/HeroSection'
 import EventSelection from './components/EventSelection'
 import WishlistCreator from './components/WishlistCreator'
@@ -49,7 +50,7 @@ export default function App() {
         />
 
         <Routes>
-          <Route path="/" element={<HeroSection />} />
+          <Route path="/" element={<BusinessSection />} />
           <Route path="/auth" element={<UserAuth />} />
           <Route path="/my-wishlists" element={
             <ProtectedRoute>

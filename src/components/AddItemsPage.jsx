@@ -1148,7 +1148,7 @@ export default function AddItemsPage() {
           {/* Floating Action Button - Only show on desktop/laptop */}
           <div className="hidden md:block">
             <motion.div
-              className="fixed right-[30vw] bottom-8 z-50"
+              className="fixed right-[24vw] bottom-8 z-50"
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5 }}
