@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef, useState } from 'react';
 import Navbar from './Navbar';
-import { FaGift, FaShare, FaHeart, FaMagic, FaLock, FaStar, FaTiktok, FaInstagram, FaEnvelope } from 'react-icons/fa';
+import { FaGift, FaShare, FaHeart, FaMagic, FaLock, FaStar, FaTiktok, FaInstagram, FaEnvelope, FaWhatsapp } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
@@ -18,16 +18,6 @@ const BusinessSection = () => {
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
 
   const features = [
-    // {
-    //   title: "Smart Wishlist Creation",
-    //   description: "Create and organize your wishlists with our intuitive interface.",
-    //   details: [
-    //     "Unlimited wishlists",
-    //     "Smart organization tools",
-    //     "Easy item management"
-    //   ],
-    //   color: "pink"
-    // },
     {
       title: "Seamless Sharing",
       description: "Share your wishlists instantly with friends and family.",
@@ -57,27 +47,7 @@ const BusinessSection = () => {
         "Automatic product details import"
       ],
       color: "pink"
-    },
-    // {
-    //   title: "Smart Group Gifting",
-    //   description: "Enable friends & family to contribute what they can afford",
-    //   details: [
-    //     "Secure payment processing",
-    //     "Anonymous contributions option",
-    //     "Real-time progress tracking"
-    //   ],
-    //   color: "purple"
-    // },
-    // {
-    //   title: "Gift Categories",
-    //   description: "Organize your wishes by type, priority, or occasion",
-    //   details: [
-    //     "Custom categories",
-    //     "Priority labeling",
-    //     "Price range filters"
-    //   ],
-    //   color: "indigo"
-    // }
+    }
   ];
 
   const events = [
@@ -151,15 +121,15 @@ const BusinessSection = () => {
   ];
 
   return (
-    <div ref={targetRef} className="relative w-full">
+    <div className="bg-gradient-to-b from-purple-50 to-white">
       <Navbar />
-      
+
       {/* Hero Section */}
       <div className="relative min-h-screen">
         {/* Background with Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-pink-700">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513885535751-8b9238bd345a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')] mix-blend-overlay opacity-30" />
-          
+
           {/* Animated Particles */}
           <div className="absolute inset-0 overflow-hidden">
             {[...Array(20)].map((_, i) => (
@@ -181,56 +151,95 @@ const BusinessSection = () => {
           </div>
         </div>
 
-        {/* Hero Content */}
+        {/* Hero Content - Modified to have text left, image right */}
         <div className="relative z-10 min-h-screen flex items-center">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-            <motion.div
-              style={{ opacity, scale }}
-              className="max-w-3xl"
-            >
-              <motion.h1 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="text-5xl md:text-7xl font-bold text-white mb-8 leading-tight"
-              >
-                Transform Your
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400"> Gift-Giving </span>
-                Experience
-              </motion.h1>
-              
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-xl md:text-2xl text-gray-200 leading-relaxed mb-12"
-              >
-                Create, share, and receive the perfect gifts every time. Join thousands of happy users making gift-giving a delightful experience.
-              </motion.p>
-
+            <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+              {/* Text Content - Left side */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: -100 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="flex flex-col sm:flex-row gap-6"
+                transition={{
+                  duration: 0.8,
+                  type: "spring",
+                  stiffness: 50
+                }}
+                className="md:w-1/2"
               >
-                <Link 
-                  to="/auth"
-                  className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full text-lg font-semibold
-                          hover:from-pink-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300
-                          shadow-lg shadow-purple-500/30"
+                <motion.h1
+                  initial={{ opacity: 0, y: -50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.6,
+                    delay: 0.3,
+                    type: "spring"
+                  }}
+                  className="text-5xl md:text-7xl font-bold text-white mb-8 leading-snug tracking-tight text-left"
                 >
-                  Get Started Now
-                </Link>
-                <a 
-                  href="https://youtu.be/9Iv8SPq80-8?si=0PpWhyLldm9hvuwR"
-                  className="px-8 py-4 bg-white/10 backdrop-blur-lg text-white rounded-full text-lg font-semibold
-                          hover:bg-white/20 transform hover:scale-105 transition-all duration-300"
+                  Accept Gifts Within
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400"> 3 Minutes</span>
+                </motion.h1>
+
+
+                <motion.p
+                  initial={{ opacity: 0, y: -30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.6,
+                    delay: 0.5,
+                    type: "spring"
+                  }}
+                  className="text-xl md:text-2xl text-gray-200 leading-relaxed mb-12 text-left"
                 >
-                  Watch Demo
-                </a>
+                  Create, share, and receive the perfect gifts every time. Join thousands of happy users making gift-giving a delightful experience.
+                </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.6,
+                    delay: 0.7,
+                    type: "spring"
+                  }}
+                  className="flex flex-col sm:flex-row gap-6"
+                >
+                  <Link
+                    to="/auth"
+                    className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full text-lg font-semibold
+                            hover:from-pink-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300
+                            shadow-lg shadow-purple-500/30"
+                  >
+                    Get Started Now
+                  </Link>
+                  <a
+                    href="https://youtu.be/9Iv8SPq80-8?si=0PpWhyLldm9hvuwR"
+                    className="px-8 py-4 bg-white/10 backdrop-blur-lg text-white rounded-full text-lg font-semibold
+                            hover:bg-white/20 transform hover:scale-105 transition-all duration-300"
+                  >
+                    Watch Demo
+                  </a>
+                </motion.div>
               </motion.div>
-            </motion.div>
+
+              {/* Image - Right side */}
+              <motion.div
+                className="md:w-1/2 mt-12 md:mt-0"
+                initial={{ opacity: 0, y: 100, x: 50 }}
+                animate={{ opacity: 1, y: 0, x: 0 }}
+                transition={{
+                  duration: 1,
+                  type: "spring",
+                  bounce: 0.4
+                }}
+              >
+                <img
+                  src="https://i.postimg.cc/tgwKCyhK/bg-remove.png"
+                  alt="Gift-giving platform"
+                  className="w-full h-auto"
+                />
+              </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -240,7 +249,7 @@ const BusinessSection = () => {
         <div className="absolute inset-0">
           {/* Animated grid background */}
           <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
-          
+
           {/* Floating particles */}
           {[...Array(20)].map((_, i) => (
             <motion.div
@@ -336,7 +345,7 @@ const BusinessSection = () => {
               transition={{ duration: 0.8 }}
               className="relative"
             >
-              <a 
+              <a
                 href="https://youtu.be/9Iv8SPq80-8?si=0PpWhyLldm9hvuwR"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -344,12 +353,12 @@ const BusinessSection = () => {
               >
                 {/* Video Thumbnail */}
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20" />
-                <img 
+                <img
                   src="https://images.unsplash.com/photo-1513885535751-8b9238bd345a?q=80&w=2070&auto=format&fit=crop"
                   alt="Tutorial Preview"
                   className="w-full h-full object-cover"
                 />
-                
+
                 {/* Play Button */}
                 <motion.div
                   whileHover={{ scale: 1.1 }}
@@ -431,58 +440,8 @@ const BusinessSection = () => {
         <div className="relative w-full">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Features List Side */}
-              <div className="space-y-8">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8 }}
-                >
-                  <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-6">
-                     Features
-                  </h2>
-                  <p className="text-xl text-gray-300 mb-12">
-                    Everything you need for the perfect gifting experience
-                  </p>
-                </motion.div>
-
-                <div className="space-y-6 text-left">
-                  {features.slice(0, 4).map((feature, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -50 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="group relative"
-                    >
-                      <div className={`relative p-6 rounded-2xl bg-gradient-to-br from-${feature.color}-900/20 to-transparent
-                                    border border-${feature.color}-500/20 backdrop-blur-sm hover:bg-${feature.color}-900/30 
-                                    transition-all duration-300`}>
-                        <div className="flex items-start gap-4">
-                          <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-${feature.color}-500/20 
-                                        flex items-center justify-center group-hover:bg-${feature.color}-500/30 
-                                        transition-colors duration-300`}>
-                            <span className={`text-${feature.color}-400 text-2xl font-bold`}>
-                              {index + 1}
-                            </span>
-                          </div>
-                          <div>
-                            <h3 className={`text-xl font-bold text-${feature.color}-400 mb-2`}>
-                              {feature.title}
-                            </h3>
-                            <p className="text-gray-300 text-sm">
-                              {feature.description}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Interactive Visual Side */}
-              <div className="relative h-[600px]">
+              {/* Interactive Visual Side - Now on the left */}
+              <div className="relative h-[600px] order-2 lg:order-1">
                 {/* 3D Gift Box */}
                 <motion.div
                   animate={{ 
@@ -582,13 +541,63 @@ const BusinessSection = () => {
                   </motion.div>
                 ))}
               </div>
+              
+              {/* Features List Side - Now on the right */}
+              <div className="space-y-8 order-1 lg:order-2">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8 }}
+                >
+                  <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-6">
+                    Features
+                  </h2>
+                  <p className="text-xl text-gray-300 mb-12">
+                    Everything you need for the perfect gifting experience
+                  </p>
+                </motion.div>
+
+                <div className="space-y-6 text-left">
+                  {features.slice(0, 4).map((feature, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -50 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="group relative"
+                    >
+                      <div className={`relative p-6 rounded-2xl bg-gradient-to-br from-${feature.color}-900/20 to-transparent
+                                    border border-${feature.color}-500/20 backdrop-blur-sm hover:bg-${feature.color}-900/30 
+                                    transition-all duration-300`}>
+                        <div className="flex items-start gap-4">
+                          <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-${feature.color}-500/20 
+                                        flex items-center justify-center group-hover:bg-${feature.color}-500/30 
+                                        transition-colors duration-300`}>
+                            <span className={`text-${feature.color}-400 text-2xl font-bold`}>
+                              {index + 1}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className={`text-xl font-bold text-${feature.color}-400 mb-2`}>
+                              {feature.title}
+                            </h3>
+                            <p className="text-gray-300 text-sm">
+                              {feature.description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Why Choose Nokonice - New Design */}
-     
+
 
       {/* Events Section - New Design */}
       <section className="relative py-32 bg-white">
@@ -621,7 +630,7 @@ const BusinessSection = () => {
                   className={`relative aspect-square rounded-2xl overflow-hidden
                             ${selectedEvent?.title === event.title ? 'ring-4 ring-purple-500' : ''}`}
                 >
-                  <img 
+                  <img
                     src={event.image}
                     alt={event.title}
                     className="absolute inset-0 w-full h-full object-cover"
@@ -709,7 +718,7 @@ const BusinessSection = () => {
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
-          
+
           {/* Floating Elements */}
           {[...Array(15)].map((_, i) => (
             <motion.div
@@ -760,26 +769,7 @@ const BusinessSection = () => {
               </div>
 
               <div className="space-y-8">
-                {/* Email Contact */}
-                {/* <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="relative p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10
-                           hover:bg-white/10 transition-all duration-300 group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="text-3xl">
-                      <FaEnvelope className="w-8 h-8 text-pink-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">Contact Us</h3>
-                      <a href="mailto:hello@nokonice.com" className="text-gray-300 hover:text-pink-400 transition-colors duration-300">
-                        hello@nokonice.com
-                      </a>
-                    </div>
-                  </div>
-                </motion.div> */}
+
 
                 {/* Social Media Section */}
                 <motion.div
@@ -790,21 +780,26 @@ const BusinessSection = () => {
                            hover:bg-white/10 transition-all duration-300 group"
                 >
                   <h3 className="text-lg font-semibold text-white mb-4">Follow Us</h3>
-                  <div className="flex justify-between px-6">
-                    <a href="https://www.tiktok.com/@usenokonice" target="_blank" rel="noopener noreferrer" 
-                       className="text-white hover:text-pink-400 transition-colors duration-300 flex flex-col items-center gap-2">
+                  <div className="flex justify-between px-6 flex align-center">
+                    <a href="https://www.tiktok.com/@usenokonice" target="_blank" rel="noopener noreferrer"
+                      className="text-white hover:text-pink-400 transition-colors duration-300 flex flex-col items-center gap-2">
                       <FaTiktok className="w-8 h-8" />
                       <span className="text-sm">TikTok</span>
                     </a>
                     <a href="https://www.instagram.com/usenokonice/" target="_blank" rel="noopener noreferrer"
-                       className="text-white hover:text-pink-400 transition-colors duration-300 flex flex-col items-center gap-2">
+                      className="text-white hover:text-pink-400 transition-colors duration-300 flex flex-col items-center gap-2">
                       <FaInstagram className="w-8 h-8" />
                       <span className="text-sm">Instagram</span>
                     </a>
                     <a href="https://x.com/usenokonice" target="_blank" rel="noopener noreferrer"
-                       className="text-white hover:text-pink-400 transition-colors duration-300 flex flex-col items-center gap-2">
+                      className="text-white hover:text-pink-400 transition-colors duration-300 flex flex-col items-center gap-2">
                       <FontAwesomeIcon icon={faXTwitter} className="w-8 h-8" />
                       <span className="text-sm">Twitter</span>
+                    </a>
+                    <a href="https://wa.me/233546561444" target="_blank" rel="noopener noreferrer"
+                      className="text-white hover:text-pink-400 transition-colors duration-300 flex flex-col items-center gap-2">
+                      <FaWhatsapp className="w-8 h-8" />
+                      <span className="text-sm">WhatsApp</span>
                     </a>
                   </div>
                 </motion.div>
@@ -838,9 +833,9 @@ const BusinessSection = () => {
             >
               <div className="relative aspect-square rounded-2xl overflow-hidden">
                 <motion.div
-                  animate={{
-                    rotateY: [0, 360],
-                  }}
+                  // animate={{
+                  //   rotateY: [0, 360],
+                  // }}
                   transition={{
                     duration: 20,
                     repeat: Infinity,
@@ -849,7 +844,7 @@ const BusinessSection = () => {
                   className="w-full h-full"
                 >
                   <img
-                    src="https://i.postimg.cc/Kj6DHx3f/Noko-Nice-Profile-001.jpg"
+                    src="https://i.postimg.cc/tgwKCyhK/bg-remove.png"
                     alt="Gift Box"
                     className="w-full h-full object-contain"
                   />
@@ -886,4 +881,5 @@ const BusinessSection = () => {
   );
 };
 
+// export default BusinessSection; 
 export default BusinessSection; 
