@@ -176,7 +176,7 @@ const BusinessSection = () => {
                   }}
                   className="text-5xl md:text-7xl font-bold text-white mb-8 leading-snug tracking-tight text-left"
                 >
-                  Accept Gifts Within
+                  Receive Gifts Within
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400"> 3 Minutes</span>
                 </motion.h1>
 
@@ -213,7 +213,7 @@ const BusinessSection = () => {
                     Get Started Now
                   </Link>
                   <a
-                    href="https://youtu.be/9Iv8SPq80-8?si=0PpWhyLldm9hvuwR"
+                    href="https://youtu.be/Vi4RSlkAA_0"
                     className="px-8 py-4 bg-white/10 backdrop-blur-lg text-white rounded-full text-lg font-semibold
                             hover:bg-white/20 transform hover:scale-105 transition-all duration-300"
                   >
@@ -305,7 +305,7 @@ const BusinessSection = () => {
                   },
                   {
                     number: "03",
-                    title: "Group Gifting",
+                    title: "Receive Gifts",
                     description: "Let friends contribute together for bigger gifts"
                   }
                 ].map((step, index) => (
@@ -346,7 +346,7 @@ const BusinessSection = () => {
               className="relative"
             >
               <a
-                href="https://youtu.be/9Iv8SPq80-8?si=0PpWhyLldm9hvuwR"
+                href="https://youtu.be/Vi4RSlkAA_0"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="relative aspect-video rounded-2xl overflow-hidden group cursor-pointer block"
@@ -566,22 +566,22 @@ const BusinessSection = () => {
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className="group relative"
                     >
-                      <div className={`relative p-6 rounded-2xl bg-gradient-to-br from-${feature.color}-900/20 to-transparent
-                                    border border-${feature.color}-500/20 backdrop-blur-sm hover:bg-${feature.color}-900/30 
-                                    transition-all duration-300`}>
+                      <div className="relative p-6 rounded-2xl bg-gradient-to-br from-purple-900/20 to-transparent
+                                    border border-purple-500/20 backdrop-blur-sm hover:bg-purple-900/30 
+                                    transition-all duration-300">
                         <div className="flex items-start gap-4">
-                          <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-${feature.color}-500/20 
-                                        flex items-center justify-center group-hover:bg-${feature.color}-500/30 
-                                        transition-colors duration-300`}>
-                            <span className={`text-${feature.color}-400 text-2xl font-bold`}>
+                          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-purple-500/20 
+                                        flex items-center justify-center group-hover:bg-purple-500/30 
+                                        transition-colors duration-300">
+                            <span className="text-white text-2xl font-bold">
                               {index + 1}
                             </span>
                           </div>
                           <div>
-                            <h3 className={`text-xl font-bold text-${feature.color}-400 mb-2`}>
+                            <h3 className="text-xl font-bold text-white mb-2">
                               {feature.title}
                             </h3>
-                            <p className="text-gray-300 text-sm">
+                            <p className="text-white text-sm">
                               {feature.description}
                             </p>
                           </div>
