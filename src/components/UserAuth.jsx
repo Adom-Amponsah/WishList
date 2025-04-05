@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiUser, FiArrowRight, FiUserPlus, FiLogIn, FiEye, FiEyeOff, FiMail } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
@@ -21,18 +21,33 @@ import { db } from '../firebase/config';
 
 export default function UserAuth() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasAccount, setHasAccount] = useState(null);
+  const [referrerId, setReferrerId] = useState(null);
+  const [referralBanner, setReferralBanner] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
     const user = getStoredUser();
     if (user) {
       navigate('/events');
+    }
+
+    // Check for referral code in URL
+    const params = new URLSearchParams(location.search);
+    const ref = params.get('ref');
+    
+    if (ref) {
+      console.log('Referral detected:', ref);
+      setReferrerId(ref);
+      setReferralBanner(true);
+      // Default to signup view when coming from a referral link
+      setHasAccount(false);
     }
 
     // Check for redirect result
@@ -47,7 +62,7 @@ export default function UserAuth() {
         console.error('Redirect error:', error);
         toast.error('Failed to sign in with Google');
       });
-  }, [navigate]);
+  }, [navigate, location]);
 
   const handleInitialChoice = (choice) => {
     setHasAccount(choice);
@@ -105,6 +120,12 @@ export default function UserAuth() {
         authProvider: 'email',
         hasCompletedDetails: false
       };
+
+      // Add referrer ID if it exists
+      if (referrerId) {
+        userData.referrerId = referrerId;
+        userData.referredAt = serverTimestamp();
+      }
 
       console.log('Creating new user with data:', userData);
       const user = await createUser(userData);
@@ -205,6 +226,12 @@ export default function UserAuth() {
         uid: googleUser.uid,
         hasCompletedDetails: false
       };
+
+      // Add referrer ID if it exists
+      if (referrerId) {
+        userData.referrerId = referrerId;
+        userData.referredAt = serverTimestamp();
+      }
 
       let userDoc;
       try {
@@ -316,9 +343,11 @@ export default function UserAuth() {
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 Welcome to Nokonice
               </h1>
-              {/* <p className="text-gray-600">
-                Do you already have an account?
-              </p> */}
+              {referralBanner && (
+                <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm">
+                  You were invited by a friend! Sign up to join Nokonice.
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -392,6 +421,11 @@ export default function UserAuth() {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               {hasAccount ? 'Sign In' : 'Create Account'}
             </h1>
+            {referralBanner && !hasAccount && (
+              <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm">
+                You were invited by a friend! Create your account to join Nokonice.
+              </div>
+            )}
             <p className="text-gray-600">
               {hasAccount 
                 ? 'Please enter your credentials to continue'
