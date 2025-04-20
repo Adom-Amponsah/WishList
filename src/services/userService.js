@@ -9,7 +9,8 @@ import {
   getDocs,
   updateDoc,
   serverTimestamp,
-  limit
+  limit,
+  orderBy
 } from 'firebase/firestore';
 import { getAuth, signOut } from 'firebase/auth';
 
@@ -374,5 +375,91 @@ export const getReferralCount = async (userId) => {
   } catch (error) {
     console.error('Error getting referral count:', error);
     return 0;
+  }
+};
+
+// Get all contributions for wishlists owned by a specific user
+export const getUserContributions = async (userId) => {
+  try {
+    // First get the user's data to get their username
+    const userData = await getUserById(userId);
+    if (!userData || !userData.username) {
+      return [];
+    }
+
+    // Query contributions by wishlist owner ID
+    const contributionsRef = collection(db, 'contributions');
+    const q = query(
+      contributionsRef,
+      where('wishlistOwnerId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.().toISOString() || null
+    }));
+  } catch (error) {
+    console.error('Error getting user contributions:', error);
+    return [];
+  }
+};
+
+// Get all contributions made to wishlists owned by users referred by a specific user
+export const getReferralContributions = async (userId) => {
+  try {
+    // Query for contributions where referrerId matches the userId
+    const contributionsRef = collection(db, 'contributions');
+    const q = query(
+      contributionsRef,
+      where('referrerId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.().toISOString() || null
+    }));
+  } catch (error) {
+    console.error('Error getting referral contributions:', error);
+    return [];
+  }
+};
+
+// Get total contribution amount for a specific user (both direct and from referrals)
+export const getUserTotalContributions = async (userId) => {
+  try {
+    // Get direct contributions
+    const directContribs = await getUserContributions(userId);
+    const directTotal = directContribs.reduce((sum, contrib) => 
+      sum + (Number(contrib.amount) || 0), 0);
+      
+    // Get referral contributions
+    const referralContribs = await getReferralContributions(userId);
+    const referralTotal = referralContribs.reduce((sum, contrib) => 
+      sum + (Number(contrib.amount) || 0), 0);
+      
+    return {
+      directTotal,
+      referralTotal,
+      grandTotal: directTotal + referralTotal,
+      directCount: directContribs.length,
+      referralCount: referralContribs.length
+    };
+  } catch (error) {
+    console.error('Error calculating total contributions:', error);
+    return {
+      directTotal: 0,
+      referralTotal: 0,
+      grandTotal: 0,
+      directCount: 0,
+      referralCount: 0
+    };
   }
 }; 

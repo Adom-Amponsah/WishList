@@ -16,13 +16,14 @@ import {
   limit
 } from 'firebase/firestore';
 import { encodeWishlistToURL } from '../utils/wishlistUrlUtils';
-import { getStoredUser } from './userService';
+import { getStoredUser, getUserById } from './userService';
 
 const WISHLISTS_STORAGE_KEY = 'wishlists'
 const SHARED_WISHLISTS_KEY = 'shared_wishlists'
 
 // Collection name constant
 const WISHLISTS_COLLECTION = 'wishlists';
+const CONTRIBUTIONS_COLLECTION = 'contributions'; // New collection for tracking all contributions
 
 // Simple function to generate a unique ID
 const generateId = () => {
@@ -402,28 +403,29 @@ export const addContribution = async (wishlistId, itemId, contribution) => {
     
     if (!wishlist) return false;
 
+    // Format the new contribution upfront so we can use it later
+    const contributionId = generateId();
+    const newContribution = {
+      id: contributionId,
+      amount: Number(contribution.amount) || 0,
+      reference: String(contribution.reference || ''),
+      isFullGift: Boolean(contribution.isFullGift),
+      contributorEmail: String(contribution.contributorEmail || ''),
+      contributorName: String(contribution.contributorName || ''),
+      status: String(contribution.status || 'success'),
+      transactionId: String(contribution.transactionId || ''),
+      createdAt: new Date().toISOString(),
+      paidAt: contribution.paidAt || new Date().toISOString(),
+      paymentMethod: String(contribution.paymentMethod || 'paystack'),
+      metadata: contribution.metadata || {}
+    };
+
     // Find the item and update its contributions
     const updatedItems = wishlist.items.map(item => {
       if (item.id === itemId) {
         // Ensure contributions array exists
         const currentContributions = Array.isArray(item.contributions) ? item.contributions : [];
         
-        // Format the new contribution
-        const newContribution = {
-          id: generateId(),
-          amount: Number(contribution.amount) || 0,
-          reference: String(contribution.reference || ''),
-          isFullGift: Boolean(contribution.isFullGift),
-          contributorEmail: String(contribution.contributorEmail || ''),
-          contributorName: String(contribution.contributorName || ''),
-          status: String(contribution.status || 'success'),
-          transactionId: String(contribution.transactionId || ''),
-          createdAt: new Date().toISOString(),
-          paidAt: contribution.paidAt || new Date().toISOString(),
-          paymentMethod: String(contribution.paymentMethod || 'paystack'),
-          metadata: contribution.metadata || {}
-        };
-
         // Calculate totals
         const currentTotal = currentContributions.reduce((sum, contrib) => sum + (Number(contrib.amount) || 0), 0);
         const newTotal = currentTotal + newContribution.amount;
@@ -443,6 +445,9 @@ export const addContribution = async (wishlistId, itemId, contribution) => {
       return item;
     });
 
+    // Find the updated item for later use
+    const contributedItem = updatedItems.find(item => item.id === itemId);
+
     // Calculate new total contributions across all items
     const totalContributions = updatedItems.reduce((sum, item) => {
       const itemContributions = Array.isArray(item.contributions) 
@@ -451,13 +456,73 @@ export const addContribution = async (wishlistId, itemId, contribution) => {
       return sum + itemContributions;
     }, 0);
 
-    // Update the document with new data
+    // Update the wishlist document with new data
     await updateDoc(docRef, {
       items: updatedItems,
       totalContributions: Number(totalContributions) || 0,
       updatedAt: serverTimestamp(),
       lastContributionAt: serverTimestamp()
     });
+
+    // Get the username of wishlist owner
+    const username = wishlist.username;
+    
+    // Find the user to get their referral information
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('username', '==', username.toLowerCase()), limit(1));
+    const querySnapshot = await getDocs(q);
+    
+    let wishlistOwnerData = null;
+    let referrerId = null;
+    
+    if (!querySnapshot.empty) {
+      wishlistOwnerData = querySnapshot.docs[0].data();
+      wishlistOwnerData.id = querySnapshot.docs[0].id;
+      
+      // Get the referrerId if it exists
+      if (wishlistOwnerData.referrerId) {
+        referrerId = wishlistOwnerData.referrerId;
+      }
+    }
+    
+    // Create a record in the contributions collection
+    const contributionRecord = {
+      id: generateId(),
+      contributionId: contributionId,
+      wishlistId,
+      itemId,
+      
+      // Item information
+      itemTitle: contributedItem?.title || 'Unknown Item',
+      itemPrice: contributedItem?.price || 0,
+      
+      // Wishlist owner information
+      wishlistOwnerId: wishlistOwnerData?.id || null,
+      wishlistOwnerUsername: username,
+      
+      // Referral information
+      referrerId: referrerId,
+      
+      // Contribution details
+      amount: Number(contribution.amount) || 0,
+      reference: String(contribution.reference || ''),
+      isFullGift: Boolean(contribution.isFullGift),
+      contributorEmail: String(contribution.contributorEmail || ''),
+      contributorName: String(contribution.contributorName || ''),
+      status: String(contribution.status || 'success'),
+      transactionId: String(contribution.transactionId || ''),
+      
+      // Timestamps
+      createdAt: serverTimestamp(),
+      paidAt: contribution.paidAt || new Date().toISOString(),
+      
+      // Payment information
+      paymentMethod: String(contribution.paymentMethod || 'paystack'),
+      metadata: contribution.metadata || {}
+    };
+    
+    // Add to the contributions collection
+    await addDoc(collection(db, CONTRIBUTIONS_COLLECTION), contributionRecord);
 
     return true;
   } catch (error) {

@@ -42,6 +42,20 @@ service cloud.firestore {
       allow update, delete: if true;
     }
     
+    // Contributions collection rules
+    match /contributions/{contributionId} {
+      // Allow reading contributions
+      allow read: if true;
+      
+      // Allow creating contributions with proper structure
+      allow create: if request.resource.data.keys().hasAll(['amount', 'wishlistId', 'itemId', 'contributionId', 'createdAt']) 
+                   && request.resource.data.amount is number
+                   && request.resource.data.amount > 0;
+                   
+      // No updates or deletes allowed for contributions
+      allow update, delete: if false;
+    }
+    
     // Deny access to all other collections by default
     match /{document=**} {
       allow read, write: if false;
